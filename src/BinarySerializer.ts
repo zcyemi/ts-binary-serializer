@@ -1,11 +1,7 @@
 import { TextDecoder,TextEncoder} from 'text-encoding';
 
 function strcmp(a, b) {
-    return (a < b
-        ? -1
-        : (a > b
-            ? 1
-            : 0));
+    return (a < b? -1: (a > b? 1: 0));
 }
 
 export enum DataType {
@@ -104,7 +100,6 @@ export class TypeReflector {
     }
 }
 
-
 class BinaryBuffer {
     public m_arrayBuffer : Uint8Array;
     private m_view : DataView;
@@ -120,8 +115,8 @@ class BinaryBuffer {
         for(var t in DataType){
             if(!isNaN(Number(t))) continue;
             let v = DataType[t];
-            this.WriteFuncMap[v] = "write"+t;
-            this.ReadFuncMap[v] = "read"+t;
+            this.WriteFuncMap[v] = "write" + t;
+            this.ReadFuncMap[v] = "read" + t;
         }
     }
 
@@ -153,6 +148,9 @@ class BinaryBuffer {
         }
         this.writeType(type);
         let f:(v:any)=>void =this[BinaryBuffer.WriteFuncMap[type]];
+        if(f == null){
+            console.log(type);
+        }
         let isobj = type == DataType.Object;
         if(!isary){
             isobj? f.call(this,val,tmc): f.call(this,val);
@@ -186,6 +184,9 @@ class BinaryBuffer {
             throw new Error("data type mismatch "+ t +" "+ type);
         let f:(v:any)=>void = this[BinaryBuffer.ReadFuncMap[type]];
         let isobj = type == DataType.Object;
+        if(f == null){
+            console.log(type);
+        }
 
         if(!isary){
             return isobj? f.call(this,tmc): f.call(this);
@@ -195,7 +196,6 @@ class BinaryBuffer {
         if(arylen == 0) return [];
 
         let ary:any[] = [];
-
         if(isobj){
             for(let i=0;i<arylen;i++){
                 ary.push(f.call(this,tmc));
@@ -301,7 +301,7 @@ class BinaryBuffer {
         view.setUint32(p, v);
         this.m_pos += 4;
     }
-    public readUInt32() : number {
+    public readUint32() : number {
         let view = this.m_view;
         let ret = view.getUint32(this.m_pos);
         this.m_pos += 4;
@@ -419,8 +419,6 @@ class BinarySeralizer {
         return tar;
     }
 }
-
-
 
 export function BinarySerialize < T > (obj : T):DataView{
     let p = Object.getPrototypeOf(obj);
