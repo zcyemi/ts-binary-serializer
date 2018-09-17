@@ -1,0 +1,15 @@
+{
+  "name": "ts-binary-serializer",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "tsc && node ./dist/index.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "text-encoding": "^0.6.4"
+  }
+}
