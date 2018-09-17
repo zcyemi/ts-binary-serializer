@@ -40,8 +40,8 @@ describe('serializer',()=>{
     obja.mint32 = -(1<<16);
     obja.muint32 = 1<<31-1;
 
-    let data = BinarySerialize(obja);
-    let objb = <ClassA>BinaryDeserialize(ClassA,data.buffer);
+    let buffer = BinarySerialize(obja);
+    let objb = <ClassA>BinaryDeserialize(ClassA,buffer);
     it("bool",()=>{
         expect(objb.mbool).to.eq(obja.mbool);
     })

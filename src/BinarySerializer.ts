@@ -363,10 +363,10 @@ class BinaryBuffer {
             this.writeUint16(0);
             return;
         }
-        let dv = BinarySeralizer.serialize(tmc,o);
-        let len = dv.byteLength;
+        let buffer = BinarySeralizer.serialize(tmc,o);
+        let len = buffer.byteLength;
         this.writeInt16(len);
-        this.m_arrayBuffer.set(new Uint8Array(dv.buffer,dv.byteOffset,len),this.m_pos);
+        this.m_arrayBuffer.set(new Uint8Array(buffer,0,len),this.m_pos);
         this.m_pos += len;
     }
 
@@ -384,7 +384,7 @@ BinaryBuffer.initialize();
 
 
 class BinarySeralizer {
-    public static serialize <T> (mc : TypeMetaClass, obj : T):DataView{
+    public static serialize <T> (mc : TypeMetaClass, obj : T):ArrayBuffer{
         let properties = mc.properties;
 
         let binarybuffer = BinaryBuffer.create();
@@ -392,7 +392,7 @@ class BinarySeralizer {
             let p = properties[i];
             binarybuffer.pushProperty(p.datatype,obj[p.key],p.isArray,p.pclass);
         }
-        return new DataView(binarybuffer.m_arrayBuffer.buffer,0,binarybuffer.pos);
+        return binarybuffer.m_arrayBuffer.buffer.slice(0,binarybuffer.pos);
     }
 
     public static deserialize<T>(tar:T,mc:TypeMetaClass,buffer:ArrayBuffer):T | null{
@@ -420,7 +420,7 @@ class BinarySeralizer {
     }
 }
 
-export function BinarySerialize < T > (obj : T):DataView{
+export function BinarySerialize < T > (obj : T):ArrayBuffer{
     let p = Object.getPrototypeOf(obj);
     let mc = TypeReflector.getMetaClass(p);
     if (mc == null) 
