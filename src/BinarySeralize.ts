@@ -27,11 +27,13 @@ export class TypeMetaProperty{
     public key:string;
     public datatype:DataType;
     public isArray:boolean = false;
+    public pclass?:TypeMetaClass;
 
-    public constructor(key:string,datatype:DataType,isary:boolean = false){
+    public constructor(key:string,datatype:DataType,isary:boolean = false,pclass?:any){
         this.key= key;
         this.datatype = datatype;
         this.isArray =isary;
+        this.pclass = pclass;
     }
 }
 
@@ -62,24 +64,33 @@ export class TypeMetaClass {
     }
 }
 
+export function seralizeField(type : DataType,array:boolean = false,ptype?:any) {
+    return function (target : any, key : string) {
+        TypeReflector.register(target, key, type,array,ptype);
+    }
+}
+
+
 export class TypeReflector {
 
     public static meta : TypeMetaClass[] = [];
-    public static register(proto : any, property : string, type : DataType,array:boolean =false) {
+    public static register(proto : any, property : string, type : DataType,array:boolean =false,ptype?:any) {
 
         let metaclass = TypeReflector.getMetaClass(proto);
         if (metaclass == null) {
             metaclass = new TypeMetaClass();
             metaclass.prototype = proto;
             metaclass.properties = [];
-            TypeReflector
-                .meta
-                .push(metaclass);
+            TypeReflector.meta.push(metaclass);
         }
 
-        metaclass
-            .properties
-            .push(new TypeMetaProperty(property,type,array));
+        let mp = new TypeMetaProperty(property,type,array);
+        if(type == DataType.Object){
+            let t= new ptype();
+            mp.pclass = <TypeMetaClass>TypeReflector.getMetaClass(Object.getPrototypeOf(t));
+        }
+
+        metaclass.properties.push(mp);
     }
 
     public static getMetaClass(prototype : any) : TypeMetaClass | null {
@@ -118,33 +129,33 @@ class BinaryBuffer {
         return this.m_pos;
     }
 
-    public static create(data? : Uint8Array) : BinaryBuffer {
+    public static create() : BinaryBuffer {
         let buffer = new BinaryBuffer();
-        if (data == null) {
-            let uint8ary = new Uint8Array(512);
+        let uint8ary = new Uint8Array(512);
             buffer.m_arrayBuffer = uint8ary;
             buffer.m_view = new DataView(uint8ary.buffer);
-        } else {
-            buffer.m_arrayBuffer = data;
-            buffer.m_view = new DataView(data.buffer);
-        }
         return buffer;
     }
 
-    public pushProperty(type : DataType, val : any,isary = false) {
+    public static createWithView(arybuffer:ArrayBuffer,offset:number,bytesize:number):BinaryBuffer{
+        let buffer = new BinaryBuffer();
+        buffer.m_arrayBuffer = new Uint8Array(arybuffer);
+        buffer.m_view = new DataView(arybuffer,offset,bytesize);
+        buffer.m_pos = offset;
+
+        return buffer;
+    }
+
+    public pushProperty(type : DataType, val : any,isary = false,tmc?:TypeMetaClass) {
         if (val == null) {
             this.writeType(DataType.Null);
             return;
         }
-
-        if(type == DataType.Object){
-            throw new Error('DataType.Object is not support currently.');
-        }
-
         this.writeType(type);
         let f:(v:any)=>void =this[BinaryBuffer.WriteFuncMap[type]];
+        let isobj = type == DataType.Object;
         if(!isary){
-            f.call(this,val);
+            isobj? f.call(this,val,tmc): f.call(this,val);
             return;
         }
         if(!Array.isArray(val)){
@@ -154,31 +165,48 @@ class BinaryBuffer {
         
         let arylen = ary.length;
         this.writeUint16(arylen);
-        for(let i=0;i<arylen;i++){
-            f.call(this,ary[i]);
+
+        if(isobj){
+            for(let i=0;i<arylen;i++){
+                f.call(this,ary[i],tmc);
+            }
+        }
+        else{
+            for(let i=0;i<arylen;i++){
+                f.call(this,ary[i]);
+            }
         }
     }
 
-    public readProperty(type : DataType,isary= false) : any {
+    public readProperty(type : DataType,isary= false,tmc?:TypeMetaClass) : any {
         let t = this.readType();
         if (t == DataType.Null) 
             return null;
         if (t != type) 
-            throw new Error(`data type mismatch ${type} ${t}`);
-        
+            throw new Error("data type mismatch "+ t +" "+ type);
         let f:(v:any)=>void = this[BinaryBuffer.ReadFuncMap[type]];
+        let isobj = type == DataType.Object;
 
         if(!isary){
-            return f.call(this);
+            return isobj? f.call(this,tmc): f.call(this);
         }
 
         let arylen = this.readUint16();
         if(arylen == 0) return [];
 
         let ary:any[] = [];
-        for(let i=0;i<arylen;i++){
-            ary.push(f.call(this));
+
+        if(isobj){
+            for(let i=0;i<arylen;i++){
+                ary.push(f.call(this,tmc));
+            }
         }
+        else{
+            for(let i=0;i<arylen;i++){
+                ary.push(f.call(this));
+            }
+        }
+
         return ary;
     }
 
@@ -326,7 +354,30 @@ class BinaryBuffer {
     }
 
     public readType() : DataType {
-        return this.readUint8();
+        let ret = this.readUint8();
+        return ret;
+    }
+
+    public writeObject(o:any,tmc:TypeMetaClass){
+        if(o == null){
+            this.writeUint16(0);
+            return;
+        }
+        let dv = BinarySeralizer.serialize(tmc,o);
+        let len = dv.byteLength;
+        this.writeInt16(len);
+        this.m_arrayBuffer.set(new Uint8Array(dv.buffer,dv.byteOffset,len),this.m_pos);
+        this.m_pos += len;
+    }
+
+    public readObject(tmc:TypeMetaClass){
+        let len = this.readUint16();
+        if(len ==0) return null;
+        let pos = this.m_pos;
+        let arybuffer = this.m_arrayBuffer.buffer.slice(pos,pos + len);
+        let ret = BinarySeralizer.deserializeWidthMeta(tmc,arybuffer,0,len);
+        this.m_pos += len;
+        return ret;
     }
 }
 BinaryBuffer.initialize();
@@ -339,15 +390,27 @@ class BinarySeralizer {
         let binarybuffer = BinaryBuffer.create();
         for(let i=0,len = properties.length;i<len;i++){
             let p = properties[i];
-            binarybuffer.pushProperty(p.datatype,obj[p.key],p.isArray);
+            binarybuffer.pushProperty(p.datatype,obj[p.key],p.isArray,p.pclass);
         }
         return new DataView(binarybuffer.m_arrayBuffer.buffer,0,binarybuffer.pos);
     }
 
     public static deserialize<T>(tar:T,mc:TypeMetaClass,buffer:ArrayBuffer):T | null{
         let properties = mc.properties;
-        let binarybuffer = BinaryBuffer.create(new Uint8Array(buffer));
+        let binarybuffer = BinaryBuffer.createWithView(buffer,0,buffer.byteLength);
+        for(let i=0,len= properties.length;i<len;i++){
+            let p = properties[i];
+            var val = binarybuffer.readProperty(p.datatype,p.isArray,p.pclass);
+            tar[p.key] = val;
+        }
+        return tar;
+    }
 
+    public static deserializeWidthMeta(mc:TypeMetaClass,buffer:ArrayBuffer,offset:number,size:number): any| null{
+        let properties = mc.properties;
+        let proto = mc.prototype;
+        let tar = Object.create(proto);
+        let binarybuffer = BinaryBuffer.createWithView(buffer,offset,size);
         for(let i=0,len= properties.length;i<len;i++){
             let p = properties[i];
             var val = binarybuffer.readProperty(p.datatype,p.isArray);
@@ -358,12 +421,6 @@ class BinarySeralizer {
 }
 
 
-
-export function seralizeField(type : DataType,array:boolean = false) {
-    return function (target : any, key : string) {
-        TypeReflector.register(target, key, type,array);
-    }
-}
 
 export function BinarySerialize < T > (obj : T):DataView{
     let p = Object.getPrototypeOf(obj);
