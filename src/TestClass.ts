@@ -8,5 +8,9 @@ export class TestClass{
     public index:number;
     @seralizeField(DataType.Float32,true)
     public floatAry:number[];
+    @seralizeField(DataType.Int16,true)
+    public int16:number[];
+    @seralizeField(DataType.String,true)
+    public strlist:string[];
 }
 

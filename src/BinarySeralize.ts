@@ -136,9 +136,27 @@ class BinaryBuffer {
             this.writeType(DataType.Null);
             return;
         }
+
+        if(type == DataType.Object){
+            throw new Error('DataType.Object is not support currently.');
+        }
+
         this.writeType(type);
-        let f = BinaryBuffer.WriteFuncMap[type];
-        this[f](val);
+        let f:(v:any)=>void =this[BinaryBuffer.WriteFuncMap[type]];
+        if(!isary){
+            f.call(this,val);
+            return;
+        }
+        if(!Array.isArray(val)){
+            throw new Error(`target property: ${val} is not an array.`)
+        }
+        let ary = <Array<any>>val;
+        
+        let arylen = ary.length;
+        this.writeUint16(arylen);
+        for(let i=0;i<arylen;i++){
+            f.call(this,ary[i]);
+        }
     }
 
     public readProperty(type : DataType,isary= false) : any {
@@ -148,8 +166,20 @@ class BinaryBuffer {
         if (t != type) 
             throw new Error(`data type mismatch ${type} ${t}`);
         
-        let f = BinaryBuffer.ReadFuncMap[type];
-        return this[f]();
+        let f:(v:any)=>void = this[BinaryBuffer.ReadFuncMap[type]];
+
+        if(!isary){
+            return f.call(this);
+        }
+
+        let arylen = this.readUint16();
+        if(arylen == 0) return [];
+
+        let ary:any[] = [];
+        for(let i=0;i<arylen;i++){
+            ary.push(f.call(this));
+        }
+        return ary;
     }
 
     public writeFloat32(v : number) {
