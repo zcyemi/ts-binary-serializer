@@ -259,7 +259,7 @@ class Bone
     public active:boolean;
     @SerializeField(DataType.Object,false,Sprite)
     public sprite:Sprite;
-
+    @SerializeField(DataType.String,false)
     public children:Array<string>;
 }
 
@@ -326,6 +326,17 @@ class Curve
 }
 
 
+function toBuffer(a:ArrayBuffer){
+    let arybuf = new Uint8Array(a);
+    let buf = new Buffer(arybuf.byteLength);
+    let len = arybuf.byteLength;
+    for(let i=0;i< len;i++){
+        buf[i] = arybuf[i];
+    }
+
+    return buf;
+}
+
 describe('benchmark',()=>{
 
     fs.readFile('./testdata/sample-data.json',(e,buffer)=>{
@@ -342,7 +353,7 @@ describe('benchmark',()=>{
         let t2 = performance.now();
         let serializedData = BinarySerialize(datainfo,DataInfo);
         console.log(`binary serialize: ${performance.now() - t2} ms`);
-
+        
         let t3 = performance.now();
         let obj1 = BinaryDeserialize(DataInfo,serializedData);
         console.log(`binary deserialize: ${performance.now() -t3} ms`);
