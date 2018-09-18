@@ -60,7 +60,7 @@ export class TypeMetaClass {
     }
 }
 
-export function seralizeField(type : DataType,array:boolean = false,ptype?:any) {
+export function SerializeField(type : DataType,array:boolean = false,ptype?:any) {
     return function (target : any, key : string) {
         TypeReflector.register(target, key, type,array,ptype);
     }

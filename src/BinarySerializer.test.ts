@@ -1,29 +1,29 @@
 import * as chai from 'chai';
 
-import { seralizeField, DataType, BinarySerialize, BinaryDeserialize} from './BinarySerializer';
+import { SerializeField, DataType, BinarySerialize, BinaryDeserialize} from './BinarySerializer';
 
 const expect = chai.expect;
 
 class ClassA{
-    @seralizeField(DataType.String)
+    @SerializeField(DataType.String)
     public mstr:string;
-    @seralizeField(DataType.Bool)
+    @SerializeField(DataType.Bool)
     public mbool:boolean;
-    @seralizeField(DataType.Float32)
+    @SerializeField(DataType.Float32)
     public mfloat32:number;
-    @seralizeField(DataType.Float64)
+    @SerializeField(DataType.Float64)
     public mfloat64:number;
-    @seralizeField(DataType.Int8)
+    @SerializeField(DataType.Int8)
     public mint8:number;
-    @seralizeField(DataType.Int16)
+    @SerializeField(DataType.Int16)
     public mint16:number;
-    @seralizeField(DataType.Int32)
+    @SerializeField(DataType.Int32)
     public mint32:number;
-    @seralizeField(DataType.Uint8)
+    @SerializeField(DataType.Uint8)
     public muint8:number;
-    @seralizeField(DataType.Uint16)
+    @SerializeField(DataType.Uint16)
     public muint16:number;
-    @seralizeField(DataType.Uint32)
+    @SerializeField(DataType.Uint32)
     public muint32:number;
 }
 
