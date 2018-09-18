@@ -344,6 +344,10 @@ describe('benchmark',()=>{
         let t1= performance.now();
         let obj = JSON.parse(jsonstr);
         console.log(`json deserialize: ${performance.now() -t1} ms`);
+        
+        let t0 = performance.now();
+        let jstr = JSON.stringify(obj);
+        console.log(`json serialize: ${performance.now() -t0} ms`);
 
         let jsonsize = buffer.byteLength;
         console.log('json size: ' + jsonsize +" byte");
