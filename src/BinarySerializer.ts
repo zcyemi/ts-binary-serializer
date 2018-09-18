@@ -176,7 +176,8 @@ class BinaryBuffer {
             return;
         }
         if(!Array.isArray(val)){
-            throw new Error(`target property: ${val} is not an array.`)
+            let msg = `target property: ${val} is not an array.`;
+            throw new Error(msg);
         }
         let ary = <Array<any>>val;
         
@@ -445,11 +446,20 @@ class BinarySeralizer {
     }
 }
 
-export function BinarySerialize < T > (obj : T):ArrayBuffer{
+export function BinarySerialize < T > (obj : T,type?:{new():T}):ArrayBuffer{
     let p = Object.getPrototypeOf(obj);
+    if(p == null || p.constructor.name == "Object"){
+        if(type == null){
+            throw new Error('param type is required.');
+        }
+        let o = new type();
+        p = Object.getPrototypeOf(o);
+    }
     let mc = TypeReflector.getMetaClass(p);
-    if (mc == null) 
-        throw new Error(`reflect class ${p} invalid`);
+    if (mc == null) {
+        let msg:string = "reflect class: " + p.name +" invalid";
+        throw new Error(msg);
+    }
     mc.sortProperty();
     return BinarySeralizer.serialize(mc,obj);
 }
