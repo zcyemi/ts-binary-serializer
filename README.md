@@ -103,10 +103,11 @@ class ClassC{
 ## Benchmark
 
 simple benchmark
-| type  | Size(byte) | SerializeTime(ms) | DeserializeTime(ms) |
-| ---   | -----      | ----              | ----                |
-| Json  | 641395     | 7.0295            | 8.5726              |
-| Binary| 157420     | 19.1871           | 19.8457             |
+
+| type | Size(byte) | SerializeTime(ms) | DeserializeTime(ms) |
+| --- | ---| --- | --- |
+| Json | 641395 | 7.0295 | 8.5726 |
+| Binary | 157420 | 19.1871 | 19.8457 |
 
 
 ## License
