@@ -80,8 +80,7 @@ export class TypeReflector {
 
         let mp = new TypeMetaProperty(property,type,array);
         if(type == DataType.Object){
-            let t= new ptype();
-            mp.pclass = <TypeMetaClass>TypeReflector.getMetaClass(Object.getPrototypeOf(t));
+            mp.pclass = <TypeMetaClass>TypeReflector.getMetaClass(ptype.prototype);
         }
 
         metaclass.properties.push(mp);
@@ -431,8 +430,7 @@ export function BinarySerialize < T > (obj : T,type?:{new():T}):ArrayBuffer{
         if(type == null){
             throw new Error('param type is required.');
         }
-        let o = new type();
-        p = Object.getPrototypeOf(o);
+        p = type.prototype;
     }
     let mc = TypeReflector.getMetaClass(p);
     if (mc == null) {
@@ -447,10 +445,12 @@ export function BinarySerialize < T > (obj : T,type?:{new():T}):ArrayBuffer{
 }
 
 export function BinaryDeserialize<T>(type:{new():T},databuffer:ArrayBuffer): T |null{
-    let obj = new type();
-    let p = Object.getPrototypeOf(obj);
-    let mc = TypeReflector.getMetaClass(p);
-    if(mc == null) throw new Error(`reflect class ${p} invalid.`);
+    let obj = Object.create(type.prototype);
+    let mc = TypeReflector.getMetaClass(type.prototype);
+    if(mc == null){
+        let msg= `reflect class ${type.prototype} invalid.`;
+        throw new Error(msg);
+    }
     mc.sortProperty();
 
     let binarybuffer = BinaryBuffer.createWithView(databuffer,0,databuffer.byteLength);
