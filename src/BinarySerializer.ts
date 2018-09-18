@@ -133,7 +133,7 @@ class BinaryBuffer {
         return buffer;
     }
 
-    public checkBufferExten(appendSize:number = 8){
+    public checkBufferExpand(appendSize:number = 8){
         let cursize = this.m_arrayBufferCurrentSize;
         if(this.m_pos + appendSize >= cursize){
             let tarsize = cursize + appendSize;
@@ -166,7 +166,9 @@ class BinaryBuffer {
         this.writeType(type);
         let f:(v:any)=>void =this[BinaryBuffer.WriteFuncMap[type]];
         let isobj = type == DataType.Object;
+
         if(!isary){
+            this.checkBufferExpand(8);
             isobj? f.call(this,val,tmc): f.call(this,val);
             return;
         }
@@ -175,15 +177,11 @@ class BinaryBuffer {
             throw new Error(msg);
         }
         let ary = <Array<any>>val;
-        
         let arylen = ary.length;
-
-        if(type != DataType.Object && type != DataType.String){
-            this.checkBufferExten(arylen *8+4);
+        if(arylen > 65535){
+            throw new Error('array length exceeded.');
         }
-        else{
-            this.checkBufferExten(4);
-        }
+        this.checkBufferExpand(arylen *8 + 4);
         this.writeUint16(arylen);
         if(isobj){
             for(let i=0;i<arylen;i++){
@@ -252,7 +250,13 @@ class BinaryBuffer {
     public writeFloat64(v : number) {
         let view = this.m_view;
         let p = this.m_pos;
-        view.setFloat64(p, v);
+        try{
+            view.setFloat64(p, v);
+        }
+        catch(e){
+            console.log(p,this.m_arrayBufferCurrentSize);
+            throw e;
+        }
         this.m_pos += 8;
     }
     public readFloat64() : number {
@@ -360,7 +364,7 @@ class BinaryBuffer {
         if (len >= 65535) 
             throw new Error('string length exceed!');
         this.writeUint16(len);
-        this.checkBufferExten(len);
+        this.checkBufferExpand(len);
         let buf = this.m_arrayBuffer;
         buf.set(ary, this.m_pos);
         this.m_pos += len;
@@ -387,77 +391,39 @@ class BinaryBuffer {
     }
 
     public writeObject(o:any,tmc:TypeMetaClass){
-        if(o == null){
-            this.writeUint32(0);
-            return;
-        }
-        let buffer = BinarySeralizer.serialize(tmc,o);
-        let len = buffer.byteLength;
-        this.checkBufferExten(len + 8);
-        this.writeUint32(len);
-        this.m_arrayBuffer.set(new Uint8Array(buffer,0,len),this.m_pos);
-        this.m_pos += len;
+        this.serialize(tmc,o);
     }
 
     public readObject(tmc:TypeMetaClass){
-        let len = this.readUint32();
-        if(len ==0) return null;
-        let pos = this.m_pos;
-        let arybuffer = this.m_arrayBuffer.buffer.slice(pos,pos + len);
-        let ret = BinarySeralizer.deserializeWidthMeta(tmc,arybuffer,0,len);
-        this.m_pos += len;
-        return ret;
+        let tar = Object.create(tmc.prototype);
+        this.deserialize(tar,tmc);
+        return tar;
+    }
+
+    public serialize<T>(mc:TypeMetaClass,obj:T){
+        let properties = mc.properties;
+        for(let i=0,len = properties.length;i<len;i++){
+            let p = properties[i];
+            this.pushProperty(p.datatype,obj[p.key],p.isArray,p.pclass);
+        }
+    }
+
+    public deserialize<T>(tar:T,mc:TypeMetaClass):T | null{
+        if(mc == null){
+            throw new Error('typeMetaClass is null');
+        }
+        mc.sortProperty();
+
+        let properties = mc.properties;
+        for(let i=0,len= properties.length;i<len;i++){
+            let p = properties[i];
+            var val = this.readProperty(p.datatype,p.isArray,p.pclass);
+            tar[p.key] = val;
+        }
+        return tar;
     }
 }
 BinaryBuffer.initialize();
-
-
-class BinarySeralizer {
-    public static serialize <T> (mc : TypeMetaClass, obj : T):ArrayBuffer{
-        let properties = mc.properties;
-
-        let binarybuffer = BinaryBuffer.create();
-        for(let i=0,len = properties.length;i<len;i++){
-            let p = properties[i];
-            binarybuffer.pushProperty(p.datatype,obj[p.key],p.isArray,p.pclass);
-        }
-        return binarybuffer.m_arrayBuffer.buffer.slice(0,binarybuffer.pos);
-    }
-
-    public static deserialize<T>(tar:T,mc:TypeMetaClass,buffer:ArrayBuffer):T | null{
-        if(mc == null){
-            throw new Error('typeMetaClass is null');
-        }
-        mc.sortProperty();
-
-        let properties = mc.properties;
-        let binarybuffer = BinaryBuffer.createWithView(buffer,0,buffer.byteLength);
-        for(let i=0,len= properties.length;i<len;i++){
-            let p = properties[i];
-            var val = binarybuffer.readProperty(p.datatype,p.isArray,p.pclass);
-            tar[p.key] = val;
-        }
-        return tar;
-    }
-
-    public static deserializeWidthMeta(mc:TypeMetaClass,buffer:ArrayBuffer,offset:number,size:number): any| null{
-        if(mc == null){
-            throw new Error('typeMetaClass is null');
-        }
-        mc.sortProperty();
-
-        let properties = mc.properties;
-        let proto = mc.prototype;
-        let tar = Object.create(proto);
-        let binarybuffer = BinaryBuffer.createWithView(buffer,offset,size);
-        for(let i=0,len= properties.length;i<len;i++){
-            let p = properties[i];
-            var val = binarybuffer.readProperty(p.datatype,p.isArray,p.pclass);
-            tar[p.key] = val;
-        }
-        return tar;
-    }
-}
 
 export function BinarySerialize < T > (obj : T,type?:{new():T}):ArrayBuffer{
     let p = Object.getPrototypeOf(obj);
@@ -474,7 +440,10 @@ export function BinarySerialize < T > (obj : T,type?:{new():T}):ArrayBuffer{
         throw new Error(msg);
     }
     mc.sortProperty();
-    return BinarySeralizer.serialize(mc,obj);
+
+    let binarybuffer = BinaryBuffer.create();
+    binarybuffer.serialize(mc,obj);
+    return binarybuffer.m_arrayBuffer.buffer.slice(0,binarybuffer.pos);
 }
 
 export function BinaryDeserialize<T>(type:{new():T},databuffer:ArrayBuffer): T |null{
@@ -483,6 +452,7 @@ export function BinaryDeserialize<T>(type:{new():T},databuffer:ArrayBuffer): T |
     let mc = TypeReflector.getMetaClass(p);
     if(mc == null) throw new Error(`reflect class ${p} invalid.`);
     mc.sortProperty();
-    return BinarySeralizer.deserialize(obj,mc,databuffer);
 
+    let binarybuffer = BinaryBuffer.createWithView(databuffer,0,databuffer.byteLength);
+    return binarybuffer.deserialize(obj,mc);
 }

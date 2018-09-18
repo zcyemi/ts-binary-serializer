@@ -199,7 +199,7 @@ describe("array",()=>{
 
 //-------------------------------------------------
 
-export class Vector2
+ class Vector2
 {
     @SerializeField(DataType.Float32)
     x:number;
@@ -207,7 +207,7 @@ export class Vector2
     y:number;
 }
 
-export class Color
+ class Color
 {
     @SerializeField(DataType.Float32)
     r:number;
@@ -219,7 +219,7 @@ export class Color
     a:number;
 }
 
-export class Sprite
+ class Sprite
 {
     @SerializeField(DataType.String)
     public spriteName:string;
@@ -235,7 +235,7 @@ export class Sprite
     public maskBone:string;
 }
 
-export class Vector3
+ class Vector3
 {
     @SerializeField(DataType.Float32)
     x:number;
@@ -263,7 +263,7 @@ class Bone
     public children:Array<string>;
 }
 
-export class Frame
+class Frame
 {
     @SerializeField(DataType.Float32)
     public time:number;
@@ -273,7 +273,7 @@ export class Frame
     public str:string;
 }
 
-export class Curve
+class Curve
 {
     @SerializeField(DataType.String)
     public aim:string;
@@ -285,7 +285,7 @@ export class Curve
     private framesDic:{[key:number]:number|string} = {}
 }
 
-export class State
+ class State
 {
     @SerializeField(DataType.String)
     public name:string;
@@ -296,7 +296,7 @@ export class State
 }
 
 
-export class Clip
+ class Clip
 {
     @SerializeField(DataType.String)
     public name:string;
@@ -307,7 +307,7 @@ export class Clip
 
 }
 
-export class Animation
+ class Animation
 {
     @SerializeField(DataType.Object,true,Clip)
     public animClips:Array<Clip>;
@@ -315,7 +315,7 @@ export class Animation
     public states:Array<State>;
 }
 
-export class DataInfo
+ class DataInfo
 {
     @SerializeField(DataType.String)
     public rootBone:string;
@@ -338,18 +338,19 @@ describe('benchmark',()=>{
         console.log('json size: ' + jsonsize +" byte");
 
         let datainfo:DataInfo = <DataInfo> obj;
-        let serializedData = BinarySerialize(datainfo,DataInfo);
+
         let t2 = performance.now();
+        let serializedData = BinarySerialize(datainfo,DataInfo);
+        console.log(`binary serialize: ${performance.now() - t2} ms`);
+
+        let t3 = performance.now();
         let obj1 = BinaryDeserialize(DataInfo,serializedData);
-        console.log(`binary deserialize: ${performance.now() -t2} ms`);
+        console.log(`binary deserialize: ${performance.now() -t3} ms`);
 
         let binarysize = serializedData.byteLength;
         console.log('binary size: '+ binarysize +" byte");
         console.log('size save: '+ ((jsonsize - binarysize)/ jsonsize));
-
     });
-
-
 })
 
 //--------------------------------------
