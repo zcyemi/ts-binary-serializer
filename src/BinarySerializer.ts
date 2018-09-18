@@ -102,6 +102,8 @@ export class TypeReflector {
 
 class BinaryBuffer {
     public m_arrayBuffer : Uint8Array;
+    private static readonly DEFAULT_BUFFER_SIZE: number = 512;
+    private m_arrayBufferCurrentSize:number = BinaryBuffer.DEFAULT_BUFFER_SIZE;
     private m_view : DataView;
     private m_pos : number = 0;
     public static EncoderUTF8 : TextEncoder = new TextEncoder();
@@ -110,6 +112,7 @@ class BinaryBuffer {
 
     private static WriteFuncMap:{[t:number]:string} ={};
     private static ReadFuncMap:{[t:number]:string} = {};
+
 
     public static initialize(){
         for(var t in DataType){
@@ -126,10 +129,26 @@ class BinaryBuffer {
 
     public static create() : BinaryBuffer {
         let buffer = new BinaryBuffer();
-        let uint8ary = new Uint8Array(512);
+        let uint8ary = new Uint8Array(BinaryBuffer.DEFAULT_BUFFER_SIZE);
             buffer.m_arrayBuffer = uint8ary;
             buffer.m_view = new DataView(uint8ary.buffer);
         return buffer;
+    }
+
+    public checkBufferExten(appendSize:number = 8){
+        let cursize = this.m_arrayBufferCurrentSize;
+        if(this.m_pos + appendSize >= cursize){
+            let tarsize = cursize + appendSize;
+            while(cursize < tarsize){
+                cursize = cursize <<1;
+            }
+            let curbuf = this.m_arrayBuffer;
+            let newbuf = new Uint8Array(cursize);
+            newbuf.set(curbuf,0);
+            this.m_arrayBuffer = newbuf;
+            this.m_arrayBufferCurrentSize = cursize;
+            this.m_view = new DataView(newbuf.buffer,0,cursize);
+        }
     }
 
     public static createWithView(arybuffer:ArrayBuffer,offset:number,bytesize:number):BinaryBuffer{
@@ -163,6 +182,10 @@ class BinaryBuffer {
         
         let arylen = ary.length;
         this.writeUint16(arylen);
+
+        if(type != DataType.Object && type != DataType.String){
+            this.checkBufferExten(arylen *8);
+        }
 
         if(isobj){
             for(let i=0;i<arylen;i++){
@@ -333,6 +356,7 @@ class BinaryBuffer {
         if (len >= 65535) 
             throw new Error('string length exceed!');
         this.writeUint16(len);
+        this.checkBufferExten(len);
         let buf = this.m_arrayBuffer;
         buf.set(ary, this.m_pos);
         this.m_pos += len;
@@ -366,6 +390,7 @@ class BinaryBuffer {
         let buffer = BinarySeralizer.serialize(tmc,o);
         let len = buffer.byteLength;
         this.writeInt16(len);
+        this.checkBufferExten(len);
         this.m_arrayBuffer.set(new Uint8Array(buffer,0,len),this.m_pos);
         this.m_pos += len;
     }

@@ -27,7 +27,7 @@ class ClassA{
     public muint32:number;
 }
 
-describe('serializer',()=>{
+describe('primitive-type',()=>{
     let obja = new ClassA();
     obja.mbool = false;
     obja.mstr = "helloworld";
@@ -74,3 +74,27 @@ describe('serializer',()=>{
     })
 })
 
+
+class LargeData{
+    @SerializeField(DataType.Float64,true)
+    public numary:number[];
+}
+
+describe('large-data',()=>{
+    let data = new LargeData();
+    let ary = new Array<number>();
+    for(var i=0;i<300;i++){
+        ary.push(Math.random());
+    }
+    data.numary =ary;
+    let serializedData = BinarySerialize(data);
+    let deserializeObj = <LargeData>BinaryDeserialize(LargeData,serializedData);
+    let dary = deserializeObj.numary;
+
+    it('large-array',()=>{
+        expect(dary.length).to.eq(ary.length);
+        for(let i=0,len = dary.length;i<len;i++){
+            expect(dary[i]).to.closeTo(ary[i],0.000000001);
+        }
+    })
+})
