@@ -1,5 +1,7 @@
 ## Changelog
 
+- 1.2.0
+    + Add Float16 dataType.
 - 1.1.0
     + Optimize performance
     + Fix some bugs
