@@ -1,4 +1,5 @@
 import { TextDecoder,TextEncoder} from 'text-encoding';
+import { Float16 } from './Float16';
 
 function strcmp(a, b) {
     return (a < b? -1: (a > b? 1: 0));
@@ -16,7 +17,8 @@ export enum DataType {
     Uint8,
     String,
     Bool,
-    Object
+    Object,
+    Float16,
 }
 
 export class TypeMetaProperty{
@@ -234,6 +236,20 @@ class BinaryBuffer {
         return ary;
     }
 
+    public writeFloat16(v:number){
+        let view = this.m_view;
+        let p = this.m_pos;
+        let d = Float16.Float16ToByte(v);
+        view.setUint16(p, d);
+        this.m_pos += 2;
+    }
+    public readFloat16() : number {
+        let view = this.m_view;
+        let d = view.getUint16(this.m_pos);
+        let ret = Float16.ByteToFloat16(d);
+        this.m_pos += 2;
+        return ret;
+    }
     public writeFloat32(v : number) {
         let view = this.m_view;
         let p = this.m_pos;

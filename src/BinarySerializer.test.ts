@@ -1,17 +1,18 @@
 import * as chai from 'chai';
 import * as fs from 'fs';
-import {performance} from'perf_hooks';
-
-import { SerializeField, DataType, BinarySerialize, BinaryDeserialize} from './BinarySerializer';
+import { performance } from 'perf_hooks';
+import { SerializeField, DataType, BinarySerialize, BinaryDeserialize } from './BinarySerializer';
+import { Float16 } from './Float16';
 
 const expect = chai.expect;
-
 
 class ClassA {
     @SerializeField(DataType.String)
     public mstr: string;
     @SerializeField(DataType.Bool)
     public mbool: boolean;
+    @SerializeField(DataType.Float16)
+    public mfloat16: number;
     @SerializeField(DataType.Float32)
     public mfloat32: number;
     @SerializeField(DataType.Float64)
@@ -34,6 +35,7 @@ describe('primitive-type', () => {
     let obja = new ClassA();
     obja.mbool = false;
     obja.mstr = "helloworld";
+    obja.mfloat16 = 0.257;
     obja.mfloat32 = 0.1548221;
     obja.mfloat64 = 355461.4811137;
     obja.mint8 = -127;
@@ -43,7 +45,7 @@ describe('primitive-type', () => {
     obja.mint32 = -(1 << 16);
     obja.muint32 = 1 << 31 - 1;
 
-    let buffer = BinarySerialize(obja,ClassA);
+    let buffer = BinarySerialize(obja, ClassA);
     let objb = <ClassA>BinaryDeserialize(ClassA, buffer);
 
     it("bool", () => {
@@ -51,6 +53,9 @@ describe('primitive-type', () => {
     })
     it("string", () => {
         expect(objb.mstr).to.eq(obja.mstr);
+    })
+    it("float16", () => {
+        expect(objb.mfloat16).to.closeTo(obja.mfloat16, 0.001);
     })
     it("float32", () => {
         expect(objb.mfloat32).to.closeTo(obja.mfloat32, 0.0000001);
@@ -78,6 +83,44 @@ describe('primitive-type', () => {
     })
 })
 
+describe('float16', () => {
+    var verify = function (b, tar) {
+        let r = Float16.ByteToFloat16(b);
+        let s = Float16.Float16ToByte(tar);
+        expect(s).to.eq(b);
+        if (tar === Infinity || tar === -Infinity) {
+            expect(r).to.eq(tar);
+        }
+        else {
+            expect(r).to.closeTo(tar, 0.001);
+        }
+    }
+
+
+    it('testsample', () => {
+        verify(0b0011110000000001, 1.0009765625);
+        verify(0b1100000000000000, -2);
+        verify(0b0111101111111111, 65504);
+        verify(0b0011110000000000, 1);
+        verify(0b1000000000000000, -0);
+        verify(0b0111110000000000, Infinity);
+        verify(0b1111110000000000, -Infinity);
+        verify(0b0000000000000000, 0);
+        verify(0b0000010000000000, 0.00006103515625);
+        verify(0b0011010101010101, 0.333251953125);
+
+        verify(0b0000001111111111, 0.00006097555160522461);
+        verify(0b0000000000000001, 5.960464477539063e-8);
+        verify(0b1011110000000001, -1.0009765625);
+        verify(0b0100000000000000, 2);
+        verify(0b1111101111111111, -65504);
+        verify(0b1011110000000000, -1);
+        verify(0b1000010000000000, -0.00006103515625);
+        verify(0b1011010101010101, -0.333251953125);
+        verify(0b1000001111111111, -0.00006097555160522461);
+        verify(0b1000000000000001, -5.960464477539063e-8);
+    })
+})
 
 class LargeData {
     @SerializeField(DataType.Float64, true)
@@ -105,23 +148,23 @@ describe('large-data', () => {
 
 //----------------------
 
-class AttatchType{
+class AttatchType {
     @SerializeField(DataType.Float32)
-    public num:number;
+    public num: number;
 }
 
-describe('attatch-type',()=>{
+describe('attatch-type', () => {
 
     //prototype: [AttatchType]
     let obj1 = new AttatchType();
-    obj1.num= 10;
+    obj1.num = 10;
 
     //prototype: [Object]
     let jstr = '{"num":10}';
     let obj2 = <AttatchType>JSON.parse(jstr);
 
     //prototype: [Object]
-    let obj3 = {num:10};
+    let obj3 = { num: 10 };
 
     //prototype: null;
     let obj4 = Object.create(null);
@@ -129,47 +172,47 @@ describe('attatch-type',()=>{
 
     //prototype: [AttatchType]
     let obj5 = {};
-    Object.setPrototypeOf(obj5,Object.getPrototypeOf(new AttatchType()));
+    Object.setPrototypeOf(obj5, Object.getPrototypeOf(new AttatchType()));
     obj5['num'] = 10;
 
-    let d1 = <AttatchType>BinaryDeserialize(AttatchType,BinarySerialize(obj1));
-    let d2 = <AttatchType>BinaryDeserialize(AttatchType,BinarySerialize(obj2,AttatchType));
-    let d3 = <AttatchType>BinaryDeserialize(AttatchType,BinarySerialize(obj3,AttatchType));
-    let d4 = <AttatchType>BinaryDeserialize(AttatchType,BinarySerialize(obj4,AttatchType));
-    let d5 = <AttatchType>BinaryDeserialize(AttatchType,BinarySerialize(obj5));
+    let d1 = <AttatchType>BinaryDeserialize(AttatchType, BinarySerialize(obj1));
+    let d2 = <AttatchType>BinaryDeserialize(AttatchType, BinarySerialize(obj2, AttatchType));
+    let d3 = <AttatchType>BinaryDeserialize(AttatchType, BinarySerialize(obj3, AttatchType));
+    let d4 = <AttatchType>BinaryDeserialize(AttatchType, BinarySerialize(obj4, AttatchType));
+    let d5 = <AttatchType>BinaryDeserialize(AttatchType, BinarySerialize(obj5));
 
-    it('new()',()=>{
+    it('new()', () => {
         expect(d1.num).to.eq(10);
     })
-    it('json-parse',()=>{
+    it('json-parse', () => {
         expect(d2.num).to.eq(10);
     })
-    it('anonymous-object',()=>{
+    it('anonymous-object', () => {
         expect(d3.num).to.eq(10);
     })
-    it('object-create',()=>{
+    it('object-create', () => {
         expect(d4.num).to.eq(10);
     })
-    it('object-set-prototype',()=>{
+    it('object-set-prototype', () => {
         expect(d5.num).to.eq(10);
     })
 });
 
 //-----------------------------------------------
 
-class ClassWithArray{
-    @SerializeField(DataType.Float32,true)
-    public ary1:Array<number>;
-    @SerializeField(DataType.Float32,true)
-    public ary2:number[];
-    @SerializeField(DataType.Float32,true)
-    public emptyAry:number[];
-    @SerializeField(DataType.Float32,true)
-    public nullAry:number[];
+class ClassWithArray {
+    @SerializeField(DataType.Float32, true)
+    public ary1: Array<number>;
+    @SerializeField(DataType.Float32, true)
+    public ary2: number[];
+    @SerializeField(DataType.Float32, true)
+    public emptyAry: number[];
+    @SerializeField(DataType.Float32, true)
+    public nullAry: number[];
 }
 
 
-describe("array",()=>{
+describe("array", () => {
 
     let obj = new ClassWithArray();
     obj.ary1 = [10];
@@ -177,194 +220,183 @@ describe("array",()=>{
     obj.emptyAry = [];
 
     let d = BinarySerialize(obj);
-    var d1 = <ClassWithArray>BinaryDeserialize(ClassWithArray,d);
+    var d1 = <ClassWithArray>BinaryDeserialize(ClassWithArray, d);
 
-    it('Array<T>',()=>{
+    it('Array<T>', () => {
         expect(d1.ary1[0]).to.eq(10);
     })
 
-    it('number[]',()=>{
+    it('number[]', () => {
         expect(d1.ary2[0]).to.eq(10);
     })
 
-    it('empty array',()=>{
+    it('empty array', () => {
         expect(d1.emptyAry.length).to.eq(0);
     })
-    
-    it('null array',()=>{
+
+    it('null array', () => {
         expect(d1.nullAry).to.null;
     })
-    
+
 });
 
 //-------------------------------------------------
 
- class Vector2
-{
+class Vector2 {
     @SerializeField(DataType.Float32)
-    x:number;
+    x: number;
     @SerializeField(DataType.Float32)
-    y:number;
+    y: number;
 }
 
- class Color
-{
+class Color {
     @SerializeField(DataType.Float32)
-    r:number;
+    r: number;
     @SerializeField(DataType.Float32)
-    g:number;
+    g: number;
     @SerializeField(DataType.Float32)
-    b:number;
+    b: number;
     @SerializeField(DataType.Float32)
-    a:number;
+    a: number;
 }
 
- class Sprite
-{
+class Sprite {
     @SerializeField(DataType.String)
-    public spriteName:string;
-    @SerializeField(DataType.Object,false,Color)
-    public spriteTint:Color;
-    @SerializeField(DataType.Object,false,Vector2)
-    public spritePivot:Vector2;
+    public spriteName: string;
+    @SerializeField(DataType.Object, false, Color)
+    public spriteTint: Color;
+    @SerializeField(DataType.Object, false, Vector2)
+    public spritePivot: Vector2;
     @SerializeField(DataType.Bool)
-    public flipX:boolean;
+    public flipX: boolean;
     @SerializeField(DataType.Bool)
-    public flipY:boolean;
+    public flipY: boolean;
     @SerializeField(DataType.String)
-    public maskBone:string;
+    public maskBone: string;
 }
 
- class Vector3
-{
+class Vector3 {
     @SerializeField(DataType.Float32)
-    x:number;
+    x: number;
     @SerializeField(DataType.Float32)
-    y:number;
+    y: number;
     @SerializeField(DataType.Float32)
-    z:number;
+    z: number;
 }
 
-class Bone
-{
+class Bone {
     @SerializeField(DataType.String)
-    public name:string;
-    @SerializeField(DataType.Object,false,Vector3)
-    public position:Vector3;
-    @SerializeField(DataType.Object,false,Vector3)
-    public scale:Vector3;
+    public name: string;
+    @SerializeField(DataType.Object, false, Vector3)
+    public position: Vector3;
+    @SerializeField(DataType.Object, false, Vector3)
+    public scale: Vector3;
     @SerializeField(DataType.Float32)
-    public rotation:number;
+    public rotation: number;
     @SerializeField(DataType.Bool)
-    public active:boolean;
-    @SerializeField(DataType.Object,false,Sprite)
-    public sprite:Sprite;
-    @SerializeField(DataType.String,false)
-    public children:Array<string>;
+    public active: boolean;
+    @SerializeField(DataType.Object, false, Sprite)
+    public sprite: Sprite;
+    @SerializeField(DataType.String, false)
+    public children: Array<string>;
 }
 
-class Frame
-{
+class Frame {
     @SerializeField(DataType.Float32)
-    public time:number;
+    public time: number;
     @SerializeField(DataType.Float32)
-    public val:number;
+    public val: number;
     @SerializeField(DataType.String)
-    public str:string;
+    public str: string;
 }
 
-class Curve
-{
+class Curve {
     @SerializeField(DataType.String)
-    public aim:string;
+    public aim: string;
     @SerializeField(DataType.String)
-    public type:string;
-    @SerializeField(DataType.Object,true,Frame)
-    public frames:Array<Frame>;
+    public type: string;
+    @SerializeField(DataType.Object, true, Frame)
+    public frames: Array<Frame>;
 
-    private framesDic:{[key:number]:number|string} = {}
+    private framesDic: { [key: number]: number | string } = {}
 }
 
- class State
-{
+class State {
     @SerializeField(DataType.String)
-    public name:string;
+    public name: string;
     @SerializeField(DataType.String)
-    public aniName:string;
-    @SerializeField(DataType.String,true)
-    public nextStates:Array<string>;
+    public aniName: string;
+    @SerializeField(DataType.String, true)
+    public nextStates: Array<string>;
 }
 
 
- class Clip
-{
+class Clip {
     @SerializeField(DataType.String)
-    public name:string;
-    @SerializeField(DataType.Object,true,Curve)
-    public curves:Array<Curve>;
+    public name: string;
+    @SerializeField(DataType.Object, true, Curve)
+    public curves: Array<Curve>;
     @SerializeField(DataType.Int16)
-    private frameCount:number;
+    private frameCount: number;
 
 }
 
- class Animation
-{
-    @SerializeField(DataType.Object,true,Clip)
-    public animClips:Array<Clip>;
-    @SerializeField(DataType.Object,true,State)
-    public states:Array<State>;
+class Animation {
+    @SerializeField(DataType.Object, true, Clip)
+    public animClips: Array<Clip>;
+    @SerializeField(DataType.Object, true, State)
+    public states: Array<State>;
 }
 
- class DataInfo
-{
+class DataInfo {
     @SerializeField(DataType.String)
-    public rootBone:string;
-    @SerializeField(DataType.Object,true,Bone)
-    public bones:Array<Bone>;
-    @SerializeField(DataType.Object,false,Animation)
-    public anim:Animation;
+    public rootBone: string;
+    @SerializeField(DataType.Object, true, Bone)
+    public bones: Array<Bone>;
+    @SerializeField(DataType.Object, false, Animation)
+    public anim: Animation;
 }
 
 
-function toBuffer(a:ArrayBuffer){
+function toBuffer(a: ArrayBuffer) {
     let arybuf = new Uint8Array(a);
     let buf = new Buffer(arybuf.byteLength);
     let len = arybuf.byteLength;
-    for(let i=0;i< len;i++){
+    for (let i = 0; i < len; i++) {
         buf[i] = arybuf[i];
     }
 
     return buf;
 }
 
-describe('benchmark',()=>{
+describe('benchmark', () => {
 
-    fs.readFile('./testdata/sample-data.json',(e,buffer)=>{
+    fs.readFile('./testdata/sample-data.json', (e, buffer) => {
         let jsonstr = buffer.toString();
-        let t1= performance.now();
+        let t1 = performance.now();
         let obj = JSON.parse(jsonstr);
-        console.log(`json deserialize: ${performance.now() -t1} ms`);
-        
+        console.log(`json deserialize: ${performance.now() - t1} ms`);
+
         let t0 = performance.now();
         let jstr = JSON.stringify(obj);
-        console.log(`json serialize: ${performance.now() -t0} ms`);
+        console.log(`json serialize: ${performance.now() - t0} ms`);
 
         let jsonsize = buffer.byteLength;
-        console.log('json size: ' + jsonsize +" byte");
+        console.log('json size: ' + jsonsize + " byte");
 
-        let datainfo:DataInfo = <DataInfo> obj;
+        let datainfo: DataInfo = <DataInfo>obj;
 
         let t2 = performance.now();
-        let serializedData = BinarySerialize(datainfo,DataInfo);
+        let serializedData = BinarySerialize(datainfo, DataInfo);
         console.log(`binary serialize: ${performance.now() - t2} ms`);
-        
+
         let t3 = performance.now();
-        let obj1 = BinaryDeserialize(DataInfo,serializedData);
-        console.log(`binary deserialize: ${performance.now() -t3} ms`);
+        let obj1 = BinaryDeserialize(DataInfo, serializedData);
+        console.log(`binary deserialize: ${performance.now() - t3} ms`);
 
         let binarysize = serializedData.byteLength;
-        console.log('binary size: '+ binarysize +" byte");
-        console.log('size save: '+ ((jsonsize - binarysize)/ jsonsize));
+        console.log('binary size: ' + binarysize + " byte");
+        console.log('size save: ' + ((jsonsize - binarysize) / jsonsize));
     });
 })
 
