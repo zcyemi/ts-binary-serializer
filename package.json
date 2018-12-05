@@ -6,7 +6,7 @@
   "module": "./dist/BinarySerializer.es.js",
   "typings": "./dist/BinarySerializer.d.ts",
   "scripts": {
-    "test": "mocha -r ts-node/register src/BinarySerializer.test.ts",
+    "test": "mocha -r ts-node/register ./tests/**.test.ts",
     "build": "tsc && rollup -c ./rollup.config.ts"
   },
   "author": "Chu Zheng",
@@ -16,9 +16,9 @@
     "text-encoding": "^0.6.4"
   },
   "devDependencies": {
-    "@types/chai": "^4.1.4",
+    "@types/chai": "^4.1.7",
     "@types/mocha": "^5.2.5",
-    "chai": "^4.1.2",
+    "chai": "^4.2.0",
     "mocha": "^5.2.0",
     "npm": "^6.4.1",
     "rollup": "^0.66.0",

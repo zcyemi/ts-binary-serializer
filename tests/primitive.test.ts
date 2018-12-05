@@ -1,8 +1,8 @@
 import * as chai from 'chai';
 import * as fs from 'fs';
 import { performance } from 'perf_hooks';
-import { SerializeField, DataType, BinarySerialize, BinaryDeserialize } from './BinarySerializer';
-import { Float16 } from './Float16';
+import { SerializeField, DataType, BinarySerialize, BinaryDeserialize } from '../src/BinarySerializer';
+import { Float16 } from '../src/Float16';
 
 const expect = chai.expect;
 
@@ -369,35 +369,35 @@ function toBuffer(a: ArrayBuffer) {
     return buf;
 }
 
-describe('benchmark', () => {
+// describe('benchmark', () => {
 
-    fs.readFile('./testdata/sample-data.json', (e, buffer) => {
-        let jsonstr = buffer.toString();
-        let t1 = performance.now();
-        let obj = JSON.parse(jsonstr);
-        console.log(`json deserialize: ${performance.now() - t1} ms`);
+//     fs.readFile('./testdata/sample-data.json', (e, buffer) => {
+//         let jsonstr = buffer.toString();
+//         let t1 = performance.now();
+//         let obj = JSON.parse(jsonstr);
+//         console.log(`json deserialize: ${performance.now() - t1} ms`);
 
-        let t0 = performance.now();
-        let jstr = JSON.stringify(obj);
-        console.log(`json serialize: ${performance.now() - t0} ms`);
+//         let t0 = performance.now();
+//         let jstr = JSON.stringify(obj);
+//         console.log(`json serialize: ${performance.now() - t0} ms`);
 
-        let jsonsize = buffer.byteLength;
-        console.log('json size: ' + jsonsize + " byte");
+//         let jsonsize = buffer.byteLength;
+//         console.log('json size: ' + jsonsize + " byte");
 
-        let datainfo: DataInfo = <DataInfo>obj;
+//         let datainfo: DataInfo = <DataInfo>obj;
 
-        let t2 = performance.now();
-        let serializedData = BinarySerialize(datainfo, DataInfo);
-        console.log(`binary serialize: ${performance.now() - t2} ms`);
+//         let t2 = performance.now();
+//         let serializedData = BinarySerialize(datainfo, DataInfo);
+//         console.log(`binary serialize: ${performance.now() - t2} ms`);
 
-        let t3 = performance.now();
-        let obj1 = BinaryDeserialize(DataInfo, serializedData);
-        console.log(`binary deserialize: ${performance.now() - t3} ms`);
+//         let t3 = performance.now();
+//         let obj1 = BinaryDeserialize(DataInfo, serializedData);
+//         console.log(`binary deserialize: ${performance.now() - t3} ms`);
 
-        let binarysize = serializedData.byteLength;
-        console.log('binary size: ' + binarysize + " byte");
-        console.log('size save: ' + ((jsonsize - binarysize) / jsonsize));
-    });
-})
+//         let binarysize = serializedData.byteLength;
+//         console.log('binary size: ' + binarysize + " byte");
+//         console.log('size save: ' + ((jsonsize - binarysize) / jsonsize));
+//     });
+// })
 
 //--------------------------------------

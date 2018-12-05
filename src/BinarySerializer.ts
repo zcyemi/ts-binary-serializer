@@ -67,6 +67,7 @@ export function SerializeField(type : DataType,array:boolean = false,ptype?:any)
 }
 
 
+
 export class TypeReflector {
 
     public static meta : TypeMetaClass[] = [];
@@ -170,7 +171,7 @@ class BinaryBuffer {
 
         if(!isary){
             this.checkBufferExpand(8);
-            isobj? f.call(this,val,tmc): f.call(this,val);
+            isobj? Reflect.apply(f,this,[tmc]) : Reflect.apply(f,this,[val]);
             return;
         }
         if(!Array.isArray(val)){
@@ -186,7 +187,7 @@ class BinaryBuffer {
         this.writeUint16(arylen);
         if(isobj){
             for(let i=0;i<arylen;i++){
-                f.call(this,ary[i],tmc);
+                Reflect.apply(f,this,[ary[i],tmc]);
             }
         }
         else{
@@ -213,7 +214,7 @@ class BinaryBuffer {
                 return  f.call(this,tmc);
             }
             else{
-                return  f.call(this);
+                return  f.call(this,null);
             }
 
         }
@@ -229,7 +230,7 @@ class BinaryBuffer {
         }
         else{
             for(let i=0;i<arylen;i++){
-                ary.push(f.call(this));
+                ary.push(f.call(this,null));
             }
         }
 
@@ -439,6 +440,7 @@ class BinaryBuffer {
     }
 }
 BinaryBuffer.initialize();
+
 
 export function BinarySerialize < T > (obj : T,type?:{new():T}):ArrayBuffer{
     let p = Object.getPrototypeOf(obj);
