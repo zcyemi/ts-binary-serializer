@@ -1,0 +1,15 @@
+export enum DataType {
+    Null,
+    Float32,
+    Float64,
+    Int32,
+    Int16,
+    Int8,
+    Uint32,
+    Uint16,
+    Uint8,
+    String,
+    Bool,
+    Object,
+    Float16,
+}

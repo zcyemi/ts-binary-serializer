@@ -1,8 +1,7 @@
 import * as chai from 'chai';
-import * as fs from 'fs';
-import { performance } from 'perf_hooks';
-import { SerializeField, DataType, BinarySerialize, BinaryDeserialize } from '../src/BinarySerializer';
+import { SerializeField, BinarySerialize, BinaryDeserialize } from '../src/BinarySerializer';
 import { Float16 } from '../src/Float16';
+import { DataType } from '../src/DataType';
 
 const expect = chai.expect;
 
@@ -95,8 +94,6 @@ describe('float16', () => {
             expect(r).to.closeTo(tar, 0.001);
         }
     }
-
-
     it('testsample', () => {
         verify(0b0011110000000001, 1.0009765625);
         verify(0b1100000000000000, -2);
@@ -108,7 +105,6 @@ describe('float16', () => {
         verify(0b0000000000000000, 0);
         verify(0b0000010000000000, 0.00006103515625);
         verify(0b0011010101010101, 0.333251953125);
-
         verify(0b0000001111111111, 0.00006097555160522461);
         verify(0b0000000000000001, 5.960464477539063e-8);
         verify(0b1011110000000001, -1.0009765625);
