@@ -1,7 +1,8 @@
 import * as chai from 'chai';
-import { SerializeField, BinarySerialize, BinaryDeserialize } from '../src/BinarySerializer';
+import {  BinarySerialize, BinaryDeserialize } from '../src/BinarySerializer';
 import { Float16 } from '../src/Float16';
 import { DataType } from '../src/DataType';
+import { SerializeField } from '../src/SerializeField';
 
 const expect = chai.expect;
 

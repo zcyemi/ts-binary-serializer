@@ -2,6 +2,9 @@ import { Float16 } from "./Float16";
 import { TypeMetaClass } from "./TypeMetaClass";
 import { DataType } from "./DataType";
 import { TextDecoder, TextEncoder } from "util";
+import { type } from "os";
+
+type TypeMeta = TypeMetaClass | DataType;
 
 export class BinaryBuffer {
     public m_arrayBuffer : Uint8Array;
@@ -64,7 +67,7 @@ export class BinaryBuffer {
         return buffer;
     }
 
-    public pushProperty(type : DataType, val : any,isary = false,tmc?:TypeMetaClass) {
+    public pushProperty<T extends TypeMetaClass | DataType>(type : DataType, val : any,isary = false,tmc?:T) {
         if (val == null) {
             this.writeType(DataType.Null);
             return;
@@ -114,7 +117,8 @@ export class BinaryBuffer {
         }
     }
 
-    public readProperty(type : DataType,isary= false,tmc?:TypeMetaClass) : any {
+
+    public readProperty<T extends TypeMeta>(type : DataType,isary= false,tmc?:T) : any {
         let t = this.readType();
         if (t == DataType.Null) 
             return null;
@@ -164,7 +168,7 @@ export class BinaryBuffer {
         return ary;
     }
 
-    public writeMap(o:{[key:string]:any},tmc?:TypeMetaClass){
+    public writeMap<T extends TypeMetaClass | DataType>(o:{[key:string]:any},tmc?:T){
         if(o == null){
             this.writeUint16(0);
             return;
@@ -184,12 +188,19 @@ export class BinaryBuffer {
             }
             else{
                 this.writeBool(true);
-                this.writeObject(v,tmc);
+                
+                if(tmc instanceof TypeMetaClass){
+                    this.writeObject(v,tmc);
+                }
+                else{
+                    let f:(v:any)=>void =this[BinaryBuffer.WriteFuncMap[<DataType>tmc]];
+                    f.call(this,v);
+                }
             }
         }
     }
 
-    public readMap(tmc:TypeMetaClass):{[key:string]:any}|null{
+    public readMap<T extends TypeMeta>(tmc:T):{[key:string]:any}|null{
         let len =this.readUint16();
         if(len == 0) return null;
         var ret = {};
@@ -198,7 +209,13 @@ export class BinaryBuffer {
             if(key == null) throw new Error("key is null");
             let notnull = this.readBool();
             if(notnull){
-                ret[key] = this.readObject(tmc);
+                if(tmc instanceof TypeMetaClass){
+                    ret[key] = this.readObject(tmc);
+                }
+                else{
+                    let f:(v:any)=>void =this[BinaryBuffer.ReadFuncMap[<DataType>tmc]];
+                    ret[key] = f.call(this,null);
+                }
             }
             else{
                 ret[key] = null;

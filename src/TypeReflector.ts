@@ -1,6 +1,9 @@
 import { TypeMetaProperty, TypeMetaClass } from "./TypeMetaClass";
 import { DataType } from "./DataType";
 
+
+
+
 export class TypeReflector {
 
     public static meta : TypeMetaClass[] = [];
@@ -16,7 +19,15 @@ export class TypeReflector {
 
         let mp = new TypeMetaProperty(property,type,array);
         if(type == DataType.Object || type == DataType.Map){
-            mp.pclass = <TypeMetaClass>TypeReflector.getMetaClass(ptype.prototype);
+            if( typeof ptype === "number"){
+                if(ptype == DataType.Null || ptype == DataType.Object || ptype == DataType.Map){
+                    throw new Error("invalid pclass for object/map");
+                }
+                mp.pclass = ptype;
+            }
+            else{
+                mp.pclass = <TypeMetaClass>TypeReflector.getMetaClass(ptype.prototype);
+            }
         }
 
         metaclass.properties.push(mp);
@@ -30,18 +41,5 @@ export class TypeReflector {
                 return m;
             }
         return null;
-    }
-
-    public static gatherAllMetaClass(tmc:TypeMetaClass,output:TypeMetaClass[]){
-        if(tmc ==null) return [];
-        if(output.indexOf(tmc) >=0) return;
-        output.push(tmc);
-        let property = tmc.properties;
-        for(let i=0,len =property.length;i<len;i++){
-            let pclass = property[i].pclass;
-            if(pclass != null){
-                this.gatherAllMetaClass(pclass,output);
-            }
-        }
     }
 }

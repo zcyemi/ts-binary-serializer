@@ -4,11 +4,7 @@ import { BinaryBuffer } from './BinaryBuffer';
 
 
 
-export function SerializeField(type : DataType,array:boolean = false,ptype?:any) {
-    return function (target : any, key : string) {
-        TypeReflector.register(target, key, type,array,ptype);
-    }
-}
+
 
 export class BinarySerializeOptions{
     public includeEntryInfo:boolean = false

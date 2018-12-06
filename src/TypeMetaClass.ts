@@ -1,10 +1,11 @@
 import { DataType } from "./DataType";
 
+
 export class TypeMetaProperty{
     public key:string;
     public datatype:DataType;
     public isArray:boolean = false;
-    public pclass?:TypeMetaClass;
+    public pclass?:TypeMetaClass | DataType;
 
     public constructor(key:string,datatype:DataType,isary:boolean = false,pclass?:any){
         this.key= key;

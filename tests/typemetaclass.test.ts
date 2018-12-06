@@ -1,7 +1,5 @@
-import { SerializeField } from '../src/BinarySerializer';
-import { TypeReflector } from '../src/TypeReflector';
-import { TypeMetaClass } from '../src/TypeMetaClass';
 import { DataType } from '../src/DataType';
+import { SerializeField } from '../src/SerializeField';
 
 class ClassB{
     @SerializeField(DataType.String)
@@ -27,13 +25,3 @@ class ClassA{
     @SerializeField(DataType.Float32)
     public num:number;
 }
-
-describe("type-meta-class",()=>{
-    it("gather-all-meta-class",()=>{
-        var a = new ClassA();
-        var meta = TypeReflector.getMetaClass(ClassA.prototype);
-        if(meta == null) return;
-        let output: TypeMetaClass[] = [];
-        TypeReflector.gatherAllMetaClass(meta,output);
-    });
-})
