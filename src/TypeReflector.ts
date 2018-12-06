@@ -15,7 +15,7 @@ export class TypeReflector {
         }
 
         let mp = new TypeMetaProperty(property,type,array);
-        if(type == DataType.Object){
+        if(type == DataType.Object || type == DataType.Map){
             mp.pclass = <TypeMetaClass>TypeReflector.getMetaClass(ptype.prototype);
         }
 

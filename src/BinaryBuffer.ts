@@ -72,10 +72,19 @@ export class BinaryBuffer {
         this.writeType(type);
         let f:(v:any)=>void =this[BinaryBuffer.WriteFuncMap[type]];
         let isobj = type == DataType.Object;
+        let ismap = type == DataType.Map;
 
         if(!isary){
             this.checkBufferExpand(8);
-            isobj? Reflect.apply(f,this,[tmc]) : Reflect.apply(f,this,[val]);
+            if(isobj){
+                Reflect.apply(f,this,[tmc]) 
+            }
+            else if(ismap){
+                this.writeMap(val,tmc);
+            }
+            else{
+                Reflect.apply(f,this,[val]);
+            }
             return;
         }
         if(!Array.isArray(val)){
@@ -94,7 +103,11 @@ export class BinaryBuffer {
                 Reflect.apply(f,this,[ary[i],tmc]);
             }
         }
-        else{
+        else if(ismap){
+            for(let i=0;i<arylen;i++){
+                this.writeMap(ary[i],tmc);
+            }
+        }else{
             for(let i=0;i<arylen;i++){
                 f.call(this,ary[i]);
             }
@@ -109,6 +122,7 @@ export class BinaryBuffer {
             throw new Error("data type mismatch "+ t +" "+ type);
         let f:(v:any)=>void = this[BinaryBuffer.ReadFuncMap[type]];
         let isobj = type == DataType.Object;
+        let ismap = type == DataType.Map;
 
         if(!isary){
             if(isobj){
@@ -117,7 +131,10 @@ export class BinaryBuffer {
                 }
                 return  f.call(this,tmc);
             }
-            else{
+            else if(ismap){
+                if(tmc == null) throw new Error("read property tmc missing: "+ type);
+                return this.readMap(tmc);
+            }else{
                 return  f.call(this,null);
             }
 
@@ -132,6 +149,12 @@ export class BinaryBuffer {
                 ary.push(f.call(this,tmc));
             }
         }
+        else if(ismap){
+            if(tmc == null) throw new Error("read property tmc missing: "+ type);
+            for(let i=0;i<arylen;i++){
+                ary.push(this.readMap(tmc));
+            }
+        }
         else{
             for(let i=0;i<arylen;i++){
                 ary.push(f.call(this,null));
@@ -139,6 +162,49 @@ export class BinaryBuffer {
         }
 
         return ary;
+    }
+
+    public writeMap(o:{[key:string]:any},tmc?:TypeMetaClass){
+        if(o == null){
+            this.writeUint16(0);
+            return;
+        }
+        var ownnames = Object.getOwnPropertyNames(o);
+        ownnames.sort();
+        if(tmc == null) throw new Error("type not found for:"+o);
+        let len = ownnames.length;
+        if(len > 65535) throw new Error("map size exceed!");
+        this.writeUint16(len);
+        for(let t=0,len =ownnames.length;t<len;t++){
+            let key = ownnames[t];
+            this.writeString(key);
+            let v = o[key];
+            if(v == null){
+                this.writeBool(false);
+            }
+            else{
+                this.writeBool(true);
+                this.writeObject(v,tmc);
+            }
+        }
+    }
+
+    public readMap(tmc:TypeMetaClass):{[key:string]:any}|null{
+        let len =this.readUint16();
+        if(len == 0) return null;
+        var ret = {};
+        for(let t=0;t<len;t++){
+            let key = this.readString();
+            if(key == null) throw new Error("key is null");
+            let notnull = this.readBool();
+            if(notnull){
+                ret[key] = this.readObject(tmc);
+            }
+            else{
+                ret[key] = null;
+            }
+        }
+        return ret;
     }
 
     public writeFloat16(v:number){

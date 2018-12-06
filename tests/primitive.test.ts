@@ -361,7 +361,6 @@ function toBuffer(a: ArrayBuffer) {
     for (let i = 0; i < len; i++) {
         buf[i] = arybuf[i];
     }
-
     return buf;
 }
 

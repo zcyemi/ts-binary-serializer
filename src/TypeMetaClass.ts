@@ -19,8 +19,18 @@ function strcmp(a, b) {
 }
 
 export class TypeMetaClass {
-    public prototype : any;
+    public get prototype() : any{
+        return this.m_prototype;
+    }
+
+    public set prototype(v:any){
+        this.m_prototype = v;
+        this.pname = this.protoName;
+    }
+    private m_prototype:any;
     public properties : TypeMetaProperty[]
+
+    public pname:string;
 
     private m_needSort : boolean = true;
 
