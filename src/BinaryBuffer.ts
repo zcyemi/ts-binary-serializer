@@ -2,6 +2,9 @@ import { Float16 } from "./Float16";
 import { TypeMetaClass } from "./TypeMetaClass";
 import { DataType } from "./DataType";
 import { TextDecoder, TextEncoder } from "util";
+import { BinarySerializeOptions } from "./BinarySerializer";
+import { TypeReflector } from "./TypeReflector";
+import { TypeMetaClassMapping } from "./TypeMetaClassMapping";
 
 export class BinaryBuffer {
     public m_arrayBuffer : Uint8Array;
@@ -15,7 +18,6 @@ export class BinaryBuffer {
 
     private static WriteFuncMap:{[t:number]:string} ={};
     private static ReadFuncMap:{[t:number]:string} = {};
-
 
     public static initialize(){
         for(var t in DataType){
@@ -55,6 +57,7 @@ export class BinaryBuffer {
         }
     }
 
+
     public static createWithView(arybuffer:ArrayBuffer,offset:number,bytesize:number):BinaryBuffer{
         let buffer = new BinaryBuffer();
         buffer.m_arrayBuffer = new Uint8Array(arybuffer);
@@ -63,6 +66,35 @@ export class BinaryBuffer {
 
         return buffer;
     }
+
+    public writeTypeMetaEntry(tmcs:TypeMetaClass[],options:BinarySerializeOptions){
+        this.writeUint16(0xF05C);
+
+        const tmcm = TypeReflector.getMetaClass(TypeMetaClassMapping.prototype);
+        if(options.includeEntryInfo){
+            let mapping:TypeMetaClassMapping[] = [];
+            for(let i=0,len = tmcs.length;i<len;i++){
+                mapping.push(new TypeMetaClassMapping(tmcs[i]));
+            }
+            this.pushProperty(DataType.Object,mapping,true,tmcm);
+        }else{
+            this.pushProperty(DataType.Object,null,true,tmcm);
+        }
+    }
+
+    public readTypeMetaEntry():TypeMetaClassMapping[]{
+        let uint16 = this.readUint16();
+        if(uint16 != 0xF05C){
+            this.m_pos-=2;
+            return null;
+        }
+
+        const tmcm = TypeReflector.getMetaClass(TypeMetaClassMapping.prototype);
+        
+        let mappings = this.readProperty(DataType.Object,true,tmcm);
+        return mappings;
+    }
+
 
     public pushProperty(type : DataType, val : any,isary = false,tmc?:TypeMetaClass) {
         if (val == null) {
@@ -75,7 +107,13 @@ export class BinaryBuffer {
 
         if(!isary){
             this.checkBufferExpand(8);
-            isobj? Reflect.apply(f,this,[tmc]) : Reflect.apply(f,this,[val]);
+            try{
+                isobj? Reflect.apply(f,this,[val,tmc]) : Reflect.apply(f,this,[val]);
+            }
+            catch(e){
+                console.error(`isobj:${isobj} tmc:${tmc} val:${val} f:${f}`);
+                throw e;
+            }
             return;
         }
         if(!Array.isArray(val)){
