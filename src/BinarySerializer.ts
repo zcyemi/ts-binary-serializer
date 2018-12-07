@@ -30,7 +30,7 @@ export function BinarySerialize < T > (obj : T,type?:{new():T},options?:BinarySe
     return binarybuffer.m_arrayBuffer.buffer.slice(0,binarybuffer.pos);
 }
 
-export function BinaryDeserialize<T>(type:{new():T},databuffer:ArrayBuffer): T |null{
+export function BinaryDeserialize<T>(type:{new():T},databuffer:ArrayBuffer): T | undefined{
     let obj = Object.create(type.prototype);
     let mc = TypeReflector.getMetaClass(type.prototype);
     if(mc == null){

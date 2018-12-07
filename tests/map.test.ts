@@ -1,6 +1,7 @@
 import {  BinarySerialize, BinaryDeserialize } from "../src/BinarySerializer";
 import { DataType } from "../src/DataType";
 import { SerializeField } from "../src/SerializeField";
+import { verfiy } from "./helper.test";
 
 
 describe("map",()=>{
@@ -24,26 +25,28 @@ describe("map",()=>{
         var map = {};
         map['java'] = new TestObj("java",10);
         map['cahrp'] = {type:"csharp",value:11};
-        var testclass = new TestClass();
-        testclass.map = map;
+        var obj1 = new TestClass();
+        obj1.map = map;
    
-        let d = BinarySerialize(testclass,TestClass);
-        let testclassd = BinaryDeserialize(TestClass,d);
+        let d = BinarySerialize(obj1,TestClass);
+        let obj2 = BinaryDeserialize(TestClass,d);
+        verfiy(obj2,obj1);
     });
 
     it("map-primitive-type",()=>{
         class TestClass{
-            @SerializeField(DataType.Map,false,DataType.Int16)
+            @SerializeField(DataType.Map,false,DataType.Float32)
             public map:{[key:string]:number};
         }
         var map = {};
         map['111'] = 111;
         map['132.4'] =132.4;
         map['-12553'] = -12553;
-        var testclass = new TestClass();
-        testclass.map = map;
+        var obj1 = new TestClass();
+        obj1.map = map;
    
-        let d = BinarySerialize(testclass,TestClass);
-        let testclassd = BinaryDeserialize(TestClass,d);
+        let d = BinarySerialize(obj1,TestClass);
+        let obj2 = BinaryDeserialize(TestClass,d);
+        verfiy(obj1,obj2);
     })
 })
