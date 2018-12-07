@@ -15,8 +15,8 @@ export class TypeMetaProperty{
     }
 }
 
-function strcmp(a, b) {
-    return (a < b? -1: (a > b? 1: 0));
+function sort(a:TypeMetaProperty, b:TypeMetaProperty) {
+    return a.key.localeCompare(b.key);
 }
 
 export class TypeMetaClass {
@@ -52,7 +52,7 @@ export class TypeMetaClass {
     public sortProperty() {
         if (!this.m_needSort) 
             return;
-        this.properties.sort((a, b) => strcmp(a, b));
+        this.properties.sort((a, b) => sort(a, b));
         this.m_needSort = false;
         return this;
     }
