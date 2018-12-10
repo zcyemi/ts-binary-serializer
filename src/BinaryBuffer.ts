@@ -1,8 +1,6 @@
 import { Float16 } from "./Float16";
 import { TypeMetaClass } from "./TypeMetaClass";
 import { DataType } from "./DataType";
-import { TextDecoder, TextEncoder } from "util";
-import { type } from "os";
 
 type TypeMeta = TypeMetaClass | DataType;
 
@@ -12,13 +10,10 @@ export class BinaryBuffer {
     private m_arrayBufferCurrentSize:number = BinaryBuffer.DEFAULT_BUFFER_SIZE;
     private m_view : DataView;
     private m_pos : number = 0;
-    public static EncoderUTF8 : TextEncoder = new TextEncoder();
-    public static DecoderUTF8 : TextDecoder = new TextDecoder();
     private constructor() {}
 
     private static WriteFuncMap:{[t:number]:string} ={};
     private static ReadFuncMap:{[t:number]:string} = {};
-
 
     public static initialize(){
         for(var t in DataType){
@@ -116,7 +111,6 @@ export class BinaryBuffer {
             }
         }
     }
-
 
     public readProperty<T extends TypeMeta>(type : DataType,isary= false,tmc?:T) : any {
         let t = this.readType();
@@ -357,31 +351,107 @@ export class BinaryBuffer {
     }
 
     public writeString(s : string) {
-        if (s === '' || s == null) {
-            this.writeUint16(0);
-            return;
-        }
-        let encoder = BinaryBuffer.EncoderUTF8;
-        let ary = encoder.encode(s);
-        let len = ary.byteLength;
-        if (len >= 65535) 
-            throw new Error('string length exceed!');
-        this.writeUint16(len);
-        this.checkBufferExpand(len);
-        let buf = this.m_arrayBuffer;
-        buf.set(ary, this.m_pos);
-        this.m_pos += len;
+        this.writeUTF8StrFast(s);
     }
 
-    public readString() {
-        let len = this.readUint16();
-        if (len == 0) 
+    public readString(){
+        return this.readUTF8StrFast();
+    }
+
+    // hack implement https://stackoverflow.com/questions/17191945/conversion-between-utf-8-arraybuffer-and-string
+    public readUTF8StrFast(){
+        const len = this.readInt32();
+        if(len == -1) return null;
+        let ary:number[] = new Array(len);
+        let s = this.m_pos;
+        const buf = this.m_arrayBuffer;
+        for(let t=0;t<len;t++){
+            ary[t] = buf[s++];
+        }
+        let ustr = String.fromCharCode(...ary);
+        this.m_pos = s;
+        return decodeURIComponent(escape(ustr));
+    }
+
+    public writeUTF8StrFast(str:string){
+        if(str == null) {
+            this.writeInt32(-1);
+            return;
+        }
+        const utf8 = unescape(encodeURIComponent(str));
+        const len = utf8.length;
+        this.writeInt32(len);
+        this.checkBufferExpand(len);
+        const view = this.m_view;
+        let p = this.m_pos;
+        for(let t= 0;t<len;t++){
+            view.setUint8(p++,utf8.charCodeAt(t));
+        }
+        this.m_pos = p;
+    }
+
+    public writeUTF8Str(str:string){
+        if(str == null) {
+            this.writeInt32(-1);
+            return;
+        }
+        const len = str.length;
+        this.writeInt32(len);
+        this.checkBufferExpand(len*4);
+        const view = this.m_view;
+        let p = this.m_pos;
+        for (var t = 0; t < len; t++) {
+            const c = str.charCodeAt(t);
+            if (c < 0x80) {
+                view.setUint8(p++, c);
+            }
+            else if (c < 0x800) {
+                view.setUint8(p++,(c >> 6) | 0xc0);
+                view.setUint8(p++,0x80 | (c & 0x3f));
+            }
+            else if (c < 0x10000) {
+                view.setUint8(p++, 0xe0 | (c >> 12));
+                view.setUint8(p++,0x80 | ((c >> 6) & 0x3f));
+                view.setUint8(p++,0x80 | (c & 0x3f));
+            }
+            else {
+                view.setUint8(p++, 0xf0 | (c >> 18));
+                view.setUint8(p++,0x80 | ((c >> 12) & 0x3f));
+                view.setUint8(p++,0x80 | ((c >> 6) & 0x3f));
+                view.setUint8(p++,0x80 | (c & 0x3f));
+            }
+        }
+        this.m_pos = p;
+    }
+
+    public readUTF8Str(){
+        var len = this.readInt32();
+        if(len == -1){
             return null;
-        let decoder = BinaryBuffer.DecoderUTF8;
-        let ary = new DataView(this.m_arrayBuffer.buffer, this.m_pos, len);
-        let str = decoder.decode(ary);
-        this.m_pos += len;
-        return str;
+        }
+        var charary:number[] = new Array(len);
+        for(let t=0;t<len;t++){
+            let c0 = this.readUint8();
+            if(c0 >> 7 == 0){
+                charary[t] = c0;
+            }
+            else if(c0 >> 5 == 0b110){
+                const c1 = this.readUint8();
+                charary[t] = ((c0 &0x1F) <<6) | (c1 & 0x3F);
+            }
+            else if(c0 >>4 == 14){
+                const c1 = this.readUint8();
+                const c2 = this.readUint8();
+                charary[t] = ((c0 & 0x0F) << 12) | ((c1 & 0x3F) << 6) |(c2 & 0x3F);
+            }
+            else{
+                const c1 = this.readUint8();
+                const c2 = this.readUint8();
+                const c3 = this.readUint8();
+                charary[t] = ((c0 & 0x07) << 18) |((c1 & 0x3F) << 12) |((c2 & 0x3F) <<6)| (c3 & 0x3F);
+            }
+        }
+        return String.fromCharCode(...charary);
     }
 
     public writeType(t : DataType) {
