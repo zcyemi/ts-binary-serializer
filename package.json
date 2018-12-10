@@ -13,7 +13,6 @@
   "homepage": "https://github.com/soyemi/ts-binary-serializer#readme",
   "license": "MIT",
   "dependencies": {
-    "text-encoding": "^0.6.4"
   },
   "devDependencies": {
     "@types/chai": "^4.1.7",
