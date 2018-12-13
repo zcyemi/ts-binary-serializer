@@ -1,5 +1,5 @@
 import { Float16 } from "./Float16";
-import { TypeMetaClass } from "./TypeMetaClass";
+import { TypeMetaClass, TypeMetaProperty } from "./TypeMetaClass";
 import { DataType } from "./DataType";
 
 type TypeMeta = TypeMetaClass | DataType;
@@ -62,7 +62,10 @@ export class BinaryBuffer {
         return buffer;
     }
 
-    public pushProperty<T extends TypeMetaClass | DataType>(type : DataType, val : any,isary = false,tmc?:T) {
+    public pushProperty(val : any,p:TypeMetaProperty) {
+        const type = p.datatype;
+        const isary = p.isArray;
+        const tmc = p.pclass;
         if (val == null) {
             this.writeType(DataType.Null);
             return;
@@ -75,7 +78,7 @@ export class BinaryBuffer {
         if(!isary){
             this.checkBufferExpand(8);
             if(isobj){
-                Reflect.apply(f,this,[tmc]) 
+                Reflect.apply(f,this,[val,tmc]) 
             }
             else if(ismap){
                 this.writeMap(val,tmc);
@@ -91,6 +94,7 @@ export class BinaryBuffer {
         }
         let ary = <Array<any>>val;
         let arylen = ary.length;
+
         if(arylen > 65535){
             throw new Error('array length exceeded.');
         }
@@ -112,15 +116,19 @@ export class BinaryBuffer {
         }
     }
 
-    public readProperty<T extends TypeMeta>(type : DataType,isary= false,tmc?:T) : any {
+    public readProperty(p:TypeMetaProperty) : any {
+        const ptype = p.datatype;
         let t = this.readType();
         if (t == DataType.Null) 
             return null;
-        if (t != type) 
-            throw new Error("data type mismatch "+ t +" "+ type);
-        let f:(v:any)=>void = this[BinaryBuffer.ReadFuncMap[type]];
-        let isobj = type == DataType.Object;
-        let ismap = type == DataType.Map;
+        if (t != ptype) 
+            throw new Error(`[property: ${p.key}] type mismatch data:${DataType[t]} - meta:${DataType[ptype]}`);
+        let f:(v:any)=>void = this[BinaryBuffer.ReadFuncMap[ptype]];
+        let isobj = ptype == DataType.Object;
+        let ismap = ptype == DataType.Map;
+
+        const isary = p.isArray;
+        const tmc = p.pclass;
 
         if(!isary){
             if(isobj){
@@ -130,7 +138,7 @@ export class BinaryBuffer {
                 return  f.call(this,tmc);
             }
             else if(ismap){
-                if(tmc == null) throw new Error("read property tmc missing: "+ type);
+                if(tmc == null) throw new Error("read property tmc missing: "+ ptype);
                 return this.readMap(tmc);
             }else{
                 return  f.call(this,null);
@@ -148,7 +156,7 @@ export class BinaryBuffer {
             }
         }
         else if(ismap){
-            if(tmc == null) throw new Error("read property tmc missing: "+ type);
+            if(tmc == null) throw new Error("read property tmc missing: "+ ptype);
             for(let i=0;i<arylen;i++){
                 ary.push(this.readMap(tmc));
             }
@@ -477,7 +485,14 @@ export class BinaryBuffer {
         let properties = mc.properties;
         for(let i=0,len = properties.length;i<len;i++){
             let p = properties[i];
-            this.pushProperty(p.datatype,obj[p.key],p.isArray,p.pclass);
+            try{
+                this.pushProperty(obj[p.key],p);
+            }
+            catch(e){
+                console.error(`property meta class of ${p.key} is null, for type: ${DataType[p.datatype]}`)
+                throw e;
+            }
+            
         }
     }
 
@@ -490,7 +505,7 @@ export class BinaryBuffer {
         let properties = mc.properties;
         for(let i=0,len= properties.length;i<len;i++){
             let p = properties[i];
-            var val = this.readProperty(p.datatype,p.isArray,p.pclass);
+            var val = this.readProperty(p);
             tar[p.key] = val;
         }
         return tar;
