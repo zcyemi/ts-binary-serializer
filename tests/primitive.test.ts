@@ -208,7 +208,6 @@ class ClassWithArray {
     public nullAry: number[];
 }
 
-
 describe("array", () => {
 
     let obj = new ClassWithArray();
@@ -236,124 +235,6 @@ describe("array", () => {
     })
 
 });
-
-//-------------------------------------------------
-
-class Vector2 {
-    @SerializeField(DataType.Float32)
-    x: number;
-    @SerializeField(DataType.Float32)
-    y: number;
-}
-
-class Color {
-    @SerializeField(DataType.Float32)
-    r: number;
-    @SerializeField(DataType.Float32)
-    g: number;
-    @SerializeField(DataType.Float32)
-    b: number;
-    @SerializeField(DataType.Float32)
-    a: number;
-}
-
-class Sprite {
-    @SerializeField(DataType.String)
-    public spriteName: string;
-    @SerializeField(DataType.Object, false, Color)
-    public spriteTint: Color;
-    @SerializeField(DataType.Object, false, Vector2)
-    public spritePivot: Vector2;
-    @SerializeField(DataType.Bool)
-    public flipX: boolean;
-    @SerializeField(DataType.Bool)
-    public flipY: boolean;
-    @SerializeField(DataType.String)
-    public maskBone: string;
-}
-
-class Vector3 {
-    @SerializeField(DataType.Float32)
-    x: number;
-    @SerializeField(DataType.Float32)
-    y: number;
-    @SerializeField(DataType.Float32)
-    z: number;
-}
-
-class Bone {
-    @SerializeField(DataType.String)
-    public name: string;
-    @SerializeField(DataType.Object, false, Vector3)
-    public position: Vector3;
-    @SerializeField(DataType.Object, false, Vector3)
-    public scale: Vector3;
-    @SerializeField(DataType.Float32)
-    public rotation: number;
-    @SerializeField(DataType.Bool)
-    public active: boolean;
-    @SerializeField(DataType.Object, false, Sprite)
-    public sprite: Sprite;
-    @SerializeField(DataType.String, false)
-    public children: Array<string>;
-}
-
-class Frame {
-    @SerializeField(DataType.Float32)
-    public time: number;
-    @SerializeField(DataType.Float32)
-    public val: number;
-    @SerializeField(DataType.String)
-    public str: string;
-}
-
-class Curve {
-    @SerializeField(DataType.String)
-    public aim: string;
-    @SerializeField(DataType.String)
-    public type: string;
-    @SerializeField(DataType.Object, true, Frame)
-    public frames: Array<Frame>;
-
-    private framesDic: { [key: number]: number | string } = {}
-}
-
-class State {
-    @SerializeField(DataType.String)
-    public name: string;
-    @SerializeField(DataType.String)
-    public aniName: string;
-    @SerializeField(DataType.String, true)
-    public nextStates: Array<string>;
-}
-
-
-class Clip {
-    @SerializeField(DataType.String)
-    public name: string;
-    @SerializeField(DataType.Object, true, Curve)
-    public curves: Array<Curve>;
-    @SerializeField(DataType.Int16)
-    private frameCount: number;
-
-}
-
-class Animation {
-    @SerializeField(DataType.Object, true, Clip)
-    public animClips: Array<Clip>;
-    @SerializeField(DataType.Object, true, State)
-    public states: Array<State>;
-}
-
-class DataInfo {
-    @SerializeField(DataType.String)
-    public rootBone: string;
-    @SerializeField(DataType.Object, true, Bone)
-    public bones: Array<Bone>;
-    @SerializeField(DataType.Object, false, Animation)
-    public anim: Animation;
-}
-
 
 function toBuffer(a: ArrayBuffer) {
     let arybuf = new Uint8Array(a);
