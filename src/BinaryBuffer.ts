@@ -1,6 +1,7 @@
 import { Float16 } from "./Float16";
 import { TypeMetaClass, TypeMetaProperty } from "./TypeMetaClass";
 import { DataType } from "./DataType";
+import { Variant } from "./VariantEncoding";
 
 type TypeMeta = TypeMetaClass | DataType;
 
@@ -291,6 +292,79 @@ export class BinaryBuffer {
         let ret = view.getFloat64(this.m_pos);
         this.m_pos += 8;
         return ret;
+    }
+
+    public writeVarint32(v:number){
+        if(v> Variant.MAX_INT || v< Variant.MIN_INT){
+            throw new Error("variant32 value range exceeded.");
+            // this.writeInt32(v);
+        }
+        else{
+            let ab = this.m_arrayBuffer;
+            let p = this.m_pos;
+            v = v >=0 ? v*2 : v*-2 -1;
+            const BYTE = 128;
+            while(v >= BYTE){
+                let b = (v & 0xFF) | BYTE;
+                ab[p] =b;
+                p++;
+                v = (v >> 7);
+            }
+            ab[p] = v;
+            this.m_pos = p+1;
+        }
+    }
+
+    public readVarint32():number{
+        let ab = this.m_arrayBuffer;
+        let p = this.m_pos;
+        let b = ab[p];
+        let index = 0;
+        let v = 0;
+        while((b & 128) > 0){
+            v += (b & 127) << (index *7);
+            index ++;
+            b = ab[p+index];
+        }
+        v += (b & 127) <<(index * 7);
+        this.m_pos += (index +1);
+        return v & 1 ? (v+1) /-2 : v /2;;
+    }
+
+    public writeUVarint32(v:number){
+        if(v> Variant.MAX_UINT || v< 0){
+            throw new Error("variant32 value range exceeded. " + v);
+            // this.writeInt32(v);
+        }
+        else{
+            let ab = this.m_arrayBuffer;
+            let p = this.m_pos;
+            const BYTE = 128;
+            while(v >= BYTE){
+                let b = (v & 0xFF) | BYTE;
+                ab[p] =b;
+                p++;
+                v = (v >> 7);
+            }
+            ab[p] = v;
+            this.m_pos = p+1;
+        }
+    }
+
+    public readUVarint32():number{
+        let ab = this.m_arrayBuffer;
+        let p = this.m_pos;
+        let b = ab[p];
+        let index = 0;
+        let v = 0;
+        while((b & 128) > 0){
+            v += (b & 127) << (index *7);
+            index ++;
+            b = ab[p+index];
+        }
+        v += (b & 127) <<(index * 7);
+        this.m_pos += (index +1);
+        return v;
     }
 
     public writeInt8(v : number) {

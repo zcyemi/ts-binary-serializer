@@ -12,5 +12,7 @@ export enum DataType {
     Bool = 10,
     Object = 11,
     Float16 = 12,
-    Map = 13
+    Map = 13,
+    Varint32 = 14,
+    UVarint32 = 15,
 }

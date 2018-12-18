@@ -1,3 +1,11 @@
+
+export module Variant{
+    export const MAX_UINT:number = 1073741824;
+    export const MAX_INT:number = 536870912;
+    export const MIN_INT:number = -1073741824;
+}
+    
+
 /**
  * max: 1<<30 1073741824
  * min: 0

@@ -26,7 +26,11 @@ export function verfiy(obj1?:any,obj2?:any){
 }
 
 
-export function estimateTime(f:()=>any,times:number = 1):[number,...Array<any>]{
+export function estimateTime<T>(f:()=>T,times:number = 1):[number,T]{
+    return <[number,T]>estimateTimeInternal(f,times);
+}
+
+export function estimateTimeInternal(f:()=>any,times:number = 1):[number,...Array<any>]{
     let t1 = performance.now();
     let ret = null;
     for(let t=0;t<times;t++){

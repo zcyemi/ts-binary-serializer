@@ -4,17 +4,20 @@ import * as fs from "fs";
 import { BinarySerializer } from "../src/BinarySerializer";
 import { verfiy, estimateTime } from "./helper.test";
 
-describe("largedata", () => {
+describe("largedata-variant", () => {
     var buffer = fs.readFileSync("./testdata/prefab.json");
     var jstr = buffer.toString();
     var jobj = <GameObjectInfo>JSON.parse(jstr);
     it("case", () => {
 
         let sd= BinarySerializer.Serialize(jobj,GameObjectInfo);
+
+
         let [dt,jobjd]= estimateTime(()=>{return BinarySerializer.Deserialize(sd,GameObjectInfo);},10);
         
         verfiy(jobjd,jobj);
-        console.log(sd.byteLength,dt);
+
+        console.log("variant:"+sd.byteLength,dt);
     });
 })
 
@@ -146,7 +149,7 @@ class Clip {
     events: Array<Event>;
     @SerializeField(DataType.Bool)
     loop: boolean;
-    @SerializeField(DataType.Int16)
+    @SerializeField(DataType.Varint32)
     private frameCount: number;
 
     public constructor(info: Clip) {
@@ -172,9 +175,9 @@ class Text {
     text: string;
     @SerializeField(DataType.Object, false, Color)
     txtTint: Color;
-    @SerializeField(DataType.Int16)
+    @SerializeField(DataType.Varint32)
     size: number;
-    @SerializeField(DataType.Int16)
+    @SerializeField(DataType.Varint32)
     pivot: number;
     @SerializeField(DataType.Float32)
     width: number;
