@@ -1,10 +1,14 @@
 import * as chai from 'chai';
 const {performance} = require('perf_hooks');
 
-export function verfiy(obj1?:object,obj2?:object){
+export function verfiy(obj1?:any,obj2?:any){
     if(obj1 == null || obj2== null){
         chai.expect(obj2).to.equal(obj1);
         return;
+    }
+    let t = typeof obj1;
+    if(t === 'string' || t === 'number' || t === 'boolean' || t === 'bigint'){
+        chai.expect(obj1).to.eq(obj2);
     }
     for(var key in obj1){
         var val = obj1[key];
