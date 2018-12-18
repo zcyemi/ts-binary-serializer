@@ -7,7 +7,6 @@ import { DataType } from "./DataType";
 export class BinaryBufDbgInfo{
     public msgs:BinaryBufDbgMsg[] = [];
     private m_lastmsg:BinaryBufDbgMsg;
-
     private m_ids:number = 0;
 
     public constructor(){
@@ -15,7 +14,7 @@ export class BinaryBufDbgInfo{
 
     public emitDebugInfo(key:string,iswrite:boolean,extra?:string){
         let lastmsg = this.m_lastmsg;
-        if(lastmsg != null && lastmsg['extra'] === extra && lastmsg.iswrite == iswrite && lastmsg.key === key){
+        if(lastmsg != null && lastmsg.extra === extra && lastmsg.iswrite == iswrite && lastmsg.key === key){
             lastmsg.count ++;
         }
         else{
@@ -44,7 +43,7 @@ export class BinaryBufDbgInfo{
     public static fmtMsgs(msgs:BinaryBufDbgMsg[]){
         let lines:string[] = [];
         msgs.forEach((msg)=>{
-            let extra = msg['extra'];
+            let extra = msg.extra;
             if(extra != null){
                 lines.push(`\t[${msg.id}] count:${msg.count} ${msg.key} extra:${extra}`);
             }
@@ -62,13 +61,14 @@ export class BinaryBufDbgMsg{
     public iswrite:boolean;
     public count:number = 0;
     public id:number = 0;
+    public extra?:string;
 
     public constructor(id:number,key:string,iswrite:boolean,count:number,extra?:string){
         this.key = key;
         this.iswrite = iswrite;
         this.count = count;
         if(extra != null){
-            this['extra'] = extra;
+            this.extra = extra;
         }
         this.id = id;
     }
