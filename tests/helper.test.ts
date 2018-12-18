@@ -1,4 +1,5 @@
 import * as chai from 'chai';
+const {performance} = require('perf_hooks');
 
 export function verfiy(obj1?:object,obj2?:object){
     if(obj1 == null || obj2== null){
@@ -18,4 +19,15 @@ export function verfiy(obj1?:object,obj2?:object){
         }
 
     }
+}
+
+
+export function estimateTime(f:()=>any,times:number = 1):[number,...Array<any>]{
+    let t1 = performance.now();
+    let ret = null;
+    for(let t=0;t<times;t++){
+        ret = f();
+    }
+    let t2 = performance.now();
+    return[t2 - t1,ret];
 }

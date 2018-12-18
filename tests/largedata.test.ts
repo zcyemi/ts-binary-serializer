@@ -1,21 +1,19 @@
 import { DataType } from "../src/DataType";
 import { SerializeField } from "../src/SerializeField";
 import * as fs from "fs";
-import { BinarySerialize, BinaryDeserialize, BinarySerializer } from "../src/BinarySerializer";
-
+import { BinarySerializer } from "../src/BinarySerializer";
+import { verfiy } from "./helper.test";
 
 describe("largedata", () => {
-
+    var buffer = fs.readFileSync("./testdata/prefab.json");
+    var jstr = buffer.toString();
+    var jobj = <GameObjectInfo>JSON.parse(jstr);
     it("case", () => {
 
-        var c= new Curve(null);
-
-        let buffer = fs.readFileSync("./testdata/prefab.json");
-        let jstr = buffer.toString();
-        let jobj = <GameObjectInfo>JSON.parse(jstr);
-        let [sd,sinfo] = BinarySerializer.SerializeWithDebugInfo(jobj,GameObjectInfo);
-
-        let [jobjd,dbginfo] = BinarySerializer.DeserializeWithDebugInfo(sd,GameObjectInfo,sinfo);
+        let sd= BinarySerializer.Serialize(jobj,GameObjectInfo);
+        let jobjd= BinarySerializer.Deserialize(sd,GameObjectInfo);
+        
+        verfiy(jobjd,jobj);
     });
 })
 

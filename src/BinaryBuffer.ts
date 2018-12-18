@@ -4,13 +4,24 @@ import { DataType } from "./DataType";
 
 type TypeMeta = TypeMetaClass | DataType;
 
+export class BinaryBufferOptions{
+    public fastUTF8string?:boolean = true;
+}
+
 export class BinaryBuffer {
+    private m_options:BinaryBufferOptions;
+    public get options():BinaryBufferOptions{ return this.m_options;}
     public m_arrayBuffer : Uint8Array;
     private static readonly DEFAULT_BUFFER_SIZE: number = 512;
     private m_arrayBufferCurrentSize:number = BinaryBuffer.DEFAULT_BUFFER_SIZE;
     private m_view : DataView;
     private m_pos : number = 0;
-    private constructor() {}
+    private constructor(options?:BinaryBufferOptions) {
+        if(options == null){
+            options =new BinaryBufferOptions();
+        }
+        this.m_options = options;
+    }
 
     private static WriteFuncMap:{[t:number]:string} ={};
     private static ReadFuncMap:{[t:number]:string} = {};
@@ -28,11 +39,17 @@ export class BinaryBuffer {
         return this.m_pos;
     }
 
-    public static create() : BinaryBuffer {
-        let buffer = new BinaryBuffer();
+    public static create(options?:BinaryBufferOptions) : BinaryBuffer {
+        let buffer = new BinaryBuffer(options);
         let uint8ary = new Uint8Array(BinaryBuffer.DEFAULT_BUFFER_SIZE);
-            buffer.m_arrayBuffer = uint8ary;
-            buffer.m_view = new DataView(uint8ary.buffer);
+        buffer.m_arrayBuffer = uint8ary;
+        buffer.m_view = new DataView(uint8ary.buffer);
+
+        if(!buffer.options.fastUTF8string){
+            buffer.writeString = buffer.writeUTF8Str;
+            buffer.readString = buffer.readUTF8Str;
+        }
+        
         return buffer;
     }
 
@@ -53,11 +70,16 @@ export class BinaryBuffer {
         }
     }
 
-    public static createWithView(arybuffer:ArrayBuffer,offset:number,bytesize:number):BinaryBuffer{
-        let buffer = new BinaryBuffer();
+    public static createWithView(arybuffer:ArrayBuffer,offset:number,bytesize:number,options?:BinaryBufferOptions,):BinaryBuffer{
+        let buffer = new BinaryBuffer(options);
         buffer.m_arrayBuffer = new Uint8Array(arybuffer);
         buffer.m_view = new DataView(arybuffer,offset,bytesize);
         buffer.m_pos = offset;
+
+        if(!buffer.options.fastUTF8string){
+            buffer.writeString = buffer.writeUTF8Str;
+            buffer.readString = buffer.readUTF8Str;
+        }
 
         return buffer;
     }
@@ -358,30 +380,8 @@ export class BinaryBuffer {
         return ret == 1;
     }
 
-    public writeString(s : string) {
-        this.writeUTF8StrFast(s);
-    }
-
-    public readString(){
-        return this.readUTF8StrFast();
-    }
-
     // hack implement https://stackoverflow.com/questions/17191945/conversion-between-utf-8-arraybuffer-and-string
-    public readUTF8StrFast(){
-        const len = this.readInt32();
-        if(len == -1) return null;
-        let ary:number[] = new Array(len);
-        let s = this.m_pos;
-        const buf = this.m_arrayBuffer;
-        for(let t=0;t<len;t++){
-            ary[t] = buf[s++];
-        }
-        let ustr = String.fromCharCode(...ary);
-        this.m_pos = s;
-        return decodeURIComponent(escape(ustr));
-    }
-
-    public writeUTF8StrFast(str:string){
+    public writeString(str : string) {
         if(str == null) {
             this.writeInt32(-1);
             return;
@@ -396,6 +396,20 @@ export class BinaryBuffer {
             view.setUint8(p++,utf8.charCodeAt(t));
         }
         this.m_pos = p;
+    }
+
+    public readString(){
+        const len = this.readInt32();
+        if(len == -1) return null;
+        let ary:number[] = new Array(len);
+        let s = this.m_pos;
+        const buf = this.m_arrayBuffer;
+        for(let t=0;t<len;t++){
+            ary[t] = buf[s++];
+        }
+        let ustr = String.fromCharCode(...ary);
+        this.m_pos = s;
+        return decodeURIComponent(escape(ustr));
     }
 
     public writeUTF8Str(str:string){
