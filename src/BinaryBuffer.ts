@@ -482,6 +482,7 @@ export class BinaryBuffer {
     }
 
     public serialize<T>(mc:TypeMetaClass,obj:T){
+        mc.sortProperty();
         let properties = mc.properties;
         for(let i=0,len = properties.length;i<len;i++){
             let p = properties[i];
