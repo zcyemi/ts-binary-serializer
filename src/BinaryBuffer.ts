@@ -62,7 +62,7 @@ export class BinaryBuffer {
         return buffer;
     }
 
-    public pushProperty(val : any,p:TypeMetaProperty) {
+    public writeProperty(val : any,p:TypeMetaProperty) {
         const type = p.datatype;
         const isary = p.isArray;
         const tmc = p.pclass;
@@ -122,7 +122,7 @@ export class BinaryBuffer {
         if (t == DataType.Null) 
             return null;
         if (t != ptype) 
-            throw new Error(`[property: ${p.key}] type mismatch data:${DataType[t]} - meta:${DataType[ptype]}`);
+            throw new Error(`[property: ${p.key}] type mismatch data:${DataType[t]}[${t}] - meta:${DataType[ptype]}[${ptype}]`);
         let f:(v:any)=>void = this[BinaryBuffer.ReadFuncMap[ptype]];
         let isobj = ptype == DataType.Object;
         let ismap = ptype == DataType.Map;
@@ -486,7 +486,7 @@ export class BinaryBuffer {
         for(let i=0,len = properties.length;i<len;i++){
             let p = properties[i];
             try{
-                this.pushProperty(obj[p.key],p);
+                this.writeProperty(obj[p.key],p);
             }
             catch(e){
                 console.error(`property meta class of ${p.key} is null, for type: ${DataType[p.datatype]}`)
