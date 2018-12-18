@@ -95,11 +95,14 @@ export class BinaryBufferDebug{
 
         }
     }
-
+    /**
+     * Inject debug info for fast finding the inconsistance between Serialize/Deserialize.
+     * Aiming for zero performance decline with debug mode disabled.
+     * @param buffer 
+     */
     public static Gen(buffer:BinaryBuffer):BinaryBuffer & BinaryBufferDebug{
         let dbuffer:BinaryBufferDebug & BinaryBuffer = Extends(buffer,BinaryBufferDebug);
         var dbginfo = dbuffer.m_dbginfo;
-
 
         for (const key in buffer) {
             ((key)=>{
