@@ -1,16 +1,21 @@
 import { DataType } from "../src/DataType";
 import { SerializeField } from "../src/SerializeField";
 import * as fs from "fs";
-import { BinarySerialize, BinaryDeserialize } from "../src/BinarySerializer";
+import { BinarySerialize, BinaryDeserialize, BinarySerializer } from "../src/BinarySerializer";
 
 
 describe("largedata", () => {
 
     it("case", () => {
+
+        var c= new Curve(null);
+
         let buffer = fs.readFileSync("./testdata/prefab.json");
         let jstr = buffer.toString();
         let jobj = <GameObjectInfo>JSON.parse(jstr);
-        let sd = BinarySerialize(jobj,GameObjectInfo);
+        let [sd,sinfo] = BinarySerializer.SerializeWithDebugInfo(jobj,GameObjectInfo);
+
+        let [jobjd,dbginfo] = BinarySerializer.DeserializeWithDebugInfo(sd,GameObjectInfo,sinfo);
     });
 })
 
@@ -120,9 +125,9 @@ class Curve {
     private framesDic: { [key: number]: number | string } = {}
 
     public constructor(info: Curve) {
-        this.aim = info.aim;
-        this.type = info.type;
-        this.frames = info.frames;
+        // this.aim = info.aim;
+        // this.type = info.type;
+        // this.frames = info.frames;
     }
 }
 
