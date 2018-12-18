@@ -1,3 +1,9 @@
 .rpt2_cache/
 rollup.config.ts
 testdata/
+
+node_modules/
+package-lock.json
+.rpt2_cache/
+/yarn.lock
+/yarn-error.log
