@@ -1,7 +1,7 @@
-import {  BinarySerialize, BinaryDeserialize } from "../src/BinarySerializer";
 import { DataType } from "../src/DataType";
 import { SerializeField } from "../src/SerializeField";
 import { verfiy } from "./helper.test";
+import { BinarySerializer } from "../src/BinarySerializer";
 
 
 describe("map",()=>{
@@ -28,8 +28,8 @@ describe("map",()=>{
         var obj1 = new TestClass();
         obj1.map = map;
    
-        let d = BinarySerialize(obj1,TestClass);
-        let obj2 = BinaryDeserialize(TestClass,d);
+        let d = BinarySerializer.Serialize(obj1,TestClass);
+        let obj2 = BinarySerializer.Deserialize(d,TestClass);
         verfiy(obj2,obj1);
     });
 
@@ -45,8 +45,8 @@ describe("map",()=>{
         var obj1 = new TestClass();
         obj1.map = map;
    
-        let d = BinarySerialize(obj1,TestClass);
-        let obj2 = BinaryDeserialize(TestClass,d);
+        let d = BinarySerializer.Serialize(obj1,TestClass);
+        let obj2 = BinarySerializer.Deserialize(d,TestClass);
         verfiy(obj1,obj2);
     })
 })

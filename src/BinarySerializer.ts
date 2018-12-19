@@ -3,6 +3,9 @@ import { BinaryBuffer } from './BinaryBuffer';
 import { TypeMetaClass } from './TypeMetaClass';
 import { BinaryBufferDebug, BinaryBufDbgInfo } from './BInaryBufferDebug';
 
+export * from './DataType';
+export * from './SerializeField';
+
 export class BinarySerializeOptions{
     public fastUTF8string?:boolean = true;
 }
@@ -10,25 +13,6 @@ export class BinarySerializeOptions{
 export class BinaryDeserializeOptions{
     public fastUTF8string?:boolean = true;
     public serializeDbgInfo?:BinaryBufDbgInfo;
-}
-
-/**
- * @deprecated since v2.0, use BinarySerializer.Serialize instead
- * @param obj 
- * @param type 
- * @param options 
- */
-export function BinarySerialize < T > (obj : T,type?:{new():T}):ArrayBuffer{
-    return BinarySerializer.Serialize(obj,type);
-}
-
-/**
- * @deprecated since v2.0, use BinarySerializer.Deserialize instead
- * @param type 
- * @param databuffer 
- */
-export function BinaryDeserialize<T>(type:{new():T},databuffer:ArrayBuffer): T{
-    return BinarySerializer.Deserialize(databuffer,type);
 }
 
 export module BinarySerializer{

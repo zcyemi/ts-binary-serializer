@@ -1,7 +1,6 @@
 import { SerializeField } from "../src/SerializeField";
 import { DataType } from "../src/DataType";
-import { BinarySerialize, BinaryDeserialize, BinarySerializer } from "../src/BinarySerializer";
-import * as chai from 'chai';
+import {  BinarySerializer } from "../src/BinarySerializer";
 import { verfiy } from "./helper.test";
 
 

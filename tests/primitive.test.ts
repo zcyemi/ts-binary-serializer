@@ -1,5 +1,5 @@
 import * as chai from 'chai';
-import {  BinarySerialize, BinaryDeserialize } from '../src/BinarySerializer';
+import { BinarySerializer } from '../src/BinarySerializer';
 import { Float16 } from '../src/Float16';
 import { DataType } from '../src/DataType';
 import { SerializeField } from '../src/SerializeField';
@@ -45,8 +45,8 @@ describe('primitive-type', () => {
     obja.mint32 = -(1 << 16);
     obja.muint32 = 1 << 31 - 1;
 
-    let buffer = BinarySerialize(obja, ClassA);
-    let objb = <ClassA>BinaryDeserialize(ClassA, buffer);
+    let buffer = BinarySerializer.Serialize(obja, ClassA);
+    let objb = <ClassA>BinarySerializer.Deserialize(buffer, ClassA);
 
     it("bool", () => {
         expect(objb.mbool).to.eq(obja.mbool);
@@ -131,8 +131,8 @@ describe('large-data', () => {
         ary.push(Math.random());
     }
     data.numary = ary;
-    let serializedData = BinarySerialize(data);
-    let deserializeObj = <LargeData>BinaryDeserialize(LargeData, serializedData);
+    let serializedData = BinarySerializer.Serialize(data);
+    let deserializeObj = <LargeData>BinarySerializer.Deserialize(serializedData, LargeData);
     let dary = deserializeObj.numary;
 
     it('large-array', () => {
@@ -172,11 +172,11 @@ describe('attatch-type', () => {
     Object.setPrototypeOf(obj5, Object.getPrototypeOf(new AttatchType()));
     obj5['num'] = 10;
 
-    let d1 = <AttatchType>BinaryDeserialize(AttatchType, BinarySerialize(obj1));
-    let d2 = <AttatchType>BinaryDeserialize(AttatchType, BinarySerialize(obj2, AttatchType));
-    let d3 = <AttatchType>BinaryDeserialize(AttatchType, BinarySerialize(obj3, AttatchType));
-    let d4 = <AttatchType>BinaryDeserialize(AttatchType, BinarySerialize(obj4, AttatchType));
-    let d5 = <AttatchType>BinaryDeserialize(AttatchType, BinarySerialize(obj5));
+    let d1 = <AttatchType>BinarySerializer.Deserialize(BinarySerializer.Serialize(obj1), AttatchType);
+    let d2 = <AttatchType>BinarySerializer.Deserialize(BinarySerializer.Serialize(obj2, AttatchType), AttatchType);
+    let d3 = <AttatchType>BinarySerializer.Deserialize(BinarySerializer.Serialize(obj3, AttatchType), AttatchType);
+    let d4 = <AttatchType>BinarySerializer.Deserialize(BinarySerializer.Serialize(obj4, AttatchType), AttatchType);
+    let d5 = <AttatchType>BinarySerializer.Deserialize(BinarySerializer.Serialize(obj5), AttatchType);
 
     it('new()', () => {
         expect(d1.num).to.eq(10);
@@ -215,8 +215,8 @@ describe("array", () => {
     obj.ary2 = [10];
     obj.emptyAry = [];
 
-    let d = BinarySerialize(obj);
-    var d1 = <ClassWithArray>BinaryDeserialize(ClassWithArray, d);
+    let d = BinarySerializer.Serialize(obj);
+    var d1 = <ClassWithArray>BinarySerializer.Deserialize(d, ClassWithArray);
 
     it('Array<T>', () => {
         expect(d1.ary1[0]).to.eq(10);
