@@ -7,3 +7,4 @@ package-lock.json
 .rpt2_cache/
 /yarn.lock
 /yarn-error.log
+/tests/
