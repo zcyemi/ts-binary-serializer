@@ -118,11 +118,8 @@ export class BinaryBuffer {
         let ary = <Array<any>>val;
         let arylen = ary.length;
 
-        if(arylen > 65535){
-            throw new Error('array length exceeded.');
-        }
         this.checkBufferExpand(arylen *8 + 4);
-        this.writeUint16(arylen);
+        this.writeVarint32(arylen);
         if(isobj){
             for(let i=0;i<arylen;i++){
                 Reflect.apply(f,this,[ary[i],tmc]);
@@ -169,7 +166,7 @@ export class BinaryBuffer {
 
         }
 
-        let arylen = this.readUint16();
+        let arylen = this.readVarint32();
         if(arylen == 0) return [];
 
         let ary:any[] = [];
@@ -457,12 +454,16 @@ export class BinaryBuffer {
     // hack implement https://stackoverflow.com/questions/17191945/conversion-between-utf-8-arraybuffer-and-string
     public writeString(str : string) {
         if(str == null) {
-            this.writeInt32(-1);
+            this.writeVarint32(-1);
+            return;
+        }
+        if(str === ''){
+            this.writeVarint32(0);
             return;
         }
         const utf8 = unescape(encodeURIComponent(str));
         const len = utf8.length;
-        this.writeInt32(len);
+        this.writeVarint32(len);
         this.checkBufferExpand(len);
         const view = this.m_view;
         let p = this.m_pos;
@@ -473,8 +474,9 @@ export class BinaryBuffer {
     }
 
     public readString(){
-        const len = this.readInt32();
+        const len = this.readVarint32();
         if(len == -1) return null;
+        if(len == 0) return '';
         let ary:number[] = new Array(len);
         let s = this.m_pos;
         const buf = this.m_arrayBuffer;
@@ -488,11 +490,15 @@ export class BinaryBuffer {
 
     public writeUTF8Str(str:string){
         if(str == null) {
-            this.writeInt32(-1);
+            this.writeVarint32(-1);
+            return;
+        }
+        if(str === ''){
+            this.writeVarint32(0);
             return;
         }
         const len = str.length;
-        this.writeInt32(len);
+        this.writeVarint32(len);
         this.checkBufferExpand(len*4);
         const view = this.m_view;
         let p = this.m_pos;
@@ -521,10 +527,11 @@ export class BinaryBuffer {
     }
 
     public readUTF8Str(){
-        var len = this.readInt32();
+        var len = this.readVarint32();
         if(len == -1){
             return null;
         }
+        if(len == 0) return '';
         var charary:number[] = new Array(len);
         for(let t=0;t<len;t++){
             let c0 = this.readUint8();

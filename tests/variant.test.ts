@@ -89,11 +89,29 @@ describe("variant",()=>{
         let [sd_non_t,sd_non] = estimateTime(()=>{return BinarySerializer.Serialize(nonvar);},10);
         let [sd_var_t,sd_var] = estimateTime(()=>{return BinarySerializer.Serialize(variant);},10);
 
-        console.log(sd_non_t,sd_var_t);
-        console.log(sd_non,sd_var);
+        //console.log(sd_non_t,sd_var_t);
+        //console.log(sd_non,sd_var);
 
     })
+
+    it("str-variant",()=>{
+        var strary = new ClassStrAry();
+        
+        var ary:string[] = [];
+        for(var t=0;t< 1000;t++){
+            ary.push("randomrandomrandomrandomrandomrandom");
+        }
+
+        strary.str = ary;
+
+        console.log("strarylen: "+ BinarySerializer.Serialize(strary,ClassStrAry).byteLength);
+    })
 })
+
+class ClassStrAry{
+    @SerializeField(DataType.String,true)
+    public str:string[]
+}
 
 class ClassVariantBenchmarkVariant{
     @SerializeField(DataType.Varint32,true)
