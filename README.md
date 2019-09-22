@@ -27,10 +27,10 @@ let d1 = BinaryDeserialize(A,d); // A { str: 'HelloWorld' }
 ## Usage
 ```ts
 //Serialize
-export function BinarySerialize <T> (obj : T,type?:{new():T}):ArrayBuffer
+export function BinarySerialize <T> (obj : T,type?:{new():T}):Uint8Array
 
 //Deserialize
-export function BinaryDeserialize<T>(type:{new():T},databuffer:ArrayBuffer): T |null
+export function BinaryDeserialize<T>(type:{new():T},databuffer:Uint8Array): T |null
 ```
 
 sample
@@ -61,11 +61,15 @@ export enum DataType {
     Int16,
     Int8,
     Uint32,
-    Uint16,
+    Uint16
     Uint8,
     String,
     Bool,
-    Object
+    Object,
+    Float16,
+    Map,
+    Varint32,
+    UVarint32,
 }
 
 ```

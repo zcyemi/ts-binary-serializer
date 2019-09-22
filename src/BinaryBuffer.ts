@@ -71,10 +71,10 @@ export class BinaryBuffer {
         }
     }
 
-    public static createWithView(arybuffer:ArrayBuffer,offset:number,bytesize:number,options?:BinaryBufferOptions,):BinaryBuffer{
+    public static createWithView(arybuffer:Uint8Array,offset:number,bytesize:number,options?:BinaryBufferOptions,):BinaryBuffer{
         let buffer = new BinaryBuffer(options);
-        buffer.m_arrayBuffer = new Uint8Array(arybuffer);
-        buffer.m_view = new DataView(arybuffer,offset,bytesize);
+        buffer.m_arrayBuffer = arybuffer;
+        buffer.m_view = new DataView(arybuffer.buffer,offset,bytesize);
         buffer.m_pos = offset;
 
         if(!buffer.options.fastUTF8string){
