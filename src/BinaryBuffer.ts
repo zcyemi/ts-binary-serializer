@@ -4,6 +4,7 @@ import { DataType } from "./DataType";
 import { Variant } from "./VariantEncoding";
 
 type TypeMeta = TypeMetaClass | DataType;
+type TypedArray = Uint8Array | Uint16Array | Uint32Array | Int32Array | Int16Array | Int8Array | Float32Array | Float64Array;
 
 export class BinaryBufferOptions{
     public fastUTF8string?:boolean = true;
@@ -100,8 +101,11 @@ export class BinaryBuffer {
 
         if(!isary){
             this.checkBufferExpand(8);
-            if(isobj){
-                Reflect.apply(f,this,[val,tmc]) 
+            if(type == DataType.TypedArray){
+                Reflect.apply(f,this,[val,tmc]);
+            }
+            else if(isobj){
+                Reflect.apply(f,this,[val,tmc]);
             }
             else if(ismap){
                 this.writeMap(val,tmc);
@@ -151,11 +155,15 @@ export class BinaryBuffer {
         const tmc = p.pclass;
 
         if(!isary){
-            if(isobj){
+            if(ptype == DataType.TypedArray){
+                return f.call(this,tmc);
+            }
+            else if(isobj){
+
                 if(tmc == null){
                     throw new Error('tmc is null');
                 }
-                return  f.call(this,tmc);
+                return f.call(this,tmc);
             }
             else if(ismap){
                 if(tmc == null) throw new Error("read property tmc missing: "+ ptype);
@@ -362,6 +370,65 @@ export class BinaryBuffer {
         v += (b & 127) <<(index * 7);
         this.m_pos += (index +1);
         return v;
+    }
+
+    public writeTypedArray(v:TypedArray,tmc:TypeMetaClass){
+        let vlen = v.length;
+        this.writeInt32(vlen);
+        this.checkBufferExpand(v.byteLength);
+
+        var cons = tmc.prototype.constructor;
+        var bytesPerElement:number = tmc.prototype['BYTES_PER_ELEMENT'];
+        var f = BinaryBuffer.TypedArrayWriteMap[cons.name];
+
+        let view = this.m_view;
+        let pos = this.m_pos;
+
+        let len = v.length;
+        for(var t=0;t<len;t++){
+            Reflect.apply(f,view,[pos,v[t]]);
+            pos +=bytesPerElement;
+        }
+        this.m_pos = pos;         
+    }
+
+    private static TypedArrayWriteMap:{[key:string]:(pos:number,v:any)=>void} = {
+        'Uint8Array':DataView.prototype.setUint8,
+        'Uint16Array':DataView.prototype.setUint16,
+        'Uint32Array':DataView.prototype.setUint32,
+        'Int8Array':DataView.prototype.setInt8,
+        'Int16Array':DataView.prototype.setInt16,
+        'Int32Array':DataView.prototype.setInt32,
+        'Float32Array':DataView.prototype.setFloat32,
+        'Float64Array':DataView.prototype.setFloat64,
+    }
+
+    private static TypedArrrayReadMap:{[key:string]:(pos:number)=>any} = {
+        'Uint8Array':DataView.prototype.getUint8,
+        'Uint16Array':DataView.prototype.getUint16,
+        'Uint32Array':DataView.prototype.getUint32,
+        'Int8Array':DataView.prototype.getInt8,
+        'Int16Array':DataView.prototype.getInt16,
+        'Int32Array':DataView.prototype.getInt32,
+        'Float32Array':DataView.prototype.getFloat32,
+        'Float64Array':DataView.prototype.getFloat64,
+    }
+
+    public readTypedArray(tmc:TypeMetaClass):object{
+        let view =this.m_view;
+        let vlen = this.readInt32();
+        var cons = tmc.prototype.constructor;
+        var f = BinaryBuffer.TypedArrrayReadMap[cons.name];
+        let tarray = new cons(vlen);
+        var bytesPerElement:number = tmc.prototype['BYTES_PER_ELEMENT'];
+        let pos =this.m_pos;
+        for(var t=0;t<vlen;t++){
+            tarray[t] = Reflect.apply(f,view,[pos]);
+            pos += bytesPerElement;
+        }
+        this.m_pos = pos;
+
+        return tarray;
     }
 
     public writeInt8(v : number) {

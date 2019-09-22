@@ -236,14 +236,74 @@ describe("array", () => {
 
 });
 
-function toBuffer(a: ArrayBuffer) {
-    let arybuf = new Uint8Array(a);
-    let buf = new Buffer(arybuf.byteLength);
-    let len = arybuf.byteLength;
-    for (let i = 0; i < len; i++) {
-        buf[i] = arybuf[i];
+//-------------------------
+
+class ClassWithTypedArray{
+    @SerializeField(DataType.TypedArray,false,Uint8Array)
+    public uint8:Uint8Array;
+    @SerializeField(DataType.TypedArray,false,Uint16Array)
+    public uint16:Uint16Array;
+    @SerializeField(DataType.TypedArray,false,Uint32Array)
+    public uint32:Uint32Array;
+    @SerializeField(DataType.TypedArray,false,Int8Array)
+    public int8:Int8Array;
+    @SerializeField(DataType.TypedArray,false,Int16Array)
+    public int16:Int16Array;
+    @SerializeField(DataType.TypedArray,false,Int32Array)
+    public int32:Int32Array;
+    @SerializeField(DataType.TypedArray,false,Float32Array)
+    public float32:Float32Array;
+    @SerializeField(DataType.TypedArray,false,Float64Array)
+    public float64:Float64Array;
+}
+
+describe("TypedArray",()=>{
+
+    var uint8 = new Uint8Array([0,255]);
+    var uint16 = new Uint16Array([65535,0,32767]);
+    var uint32 =new Uint32Array([4294967295,0,4332])
+    var int8= new Int8Array([-128,127,0])
+    var int16 = new Int16Array([-32758,32767,0]);
+    var int32 = new Int32Array([-2147483648,2147483647,0]);
+    var float32 = new Float32Array([0.435,-546556.33,67663.2324443]);
+    var float64 = new Float64Array([0.435,-546556.33,67663.2324443]);
+ 
+
+    var obj = new ClassWithTypedArray();
+    obj.uint8 = uint8;
+    obj.uint16 = uint16;
+    obj.uint32 = uint32;
+    obj.int8 = int8;
+    obj.int16 = int16;
+    obj.int32 = int32;
+    obj.float32 = float32;
+    obj.float64 = float64;
+
+    var binarydata = BinarySerializer.Serialize(obj,ClassWithTypedArray);
+    var newobj = BinarySerializer.Deserialize(binarydata,ClassWithTypedArray);
+
+    it("uint8",()=>expectArrayBuffer(newobj.uint8,uint8));
+    it("uint16",()=>expectArrayBuffer(newobj.uint16,uint16));
+    it("uint32",()=>expectArrayBuffer(newobj.uint32,uint32));
+
+    it("int8",()=>expectArrayBuffer(newobj.int8,int8));
+    it("int16",()=>expectArrayBuffer(newobj.int16,int16));
+    it("int32",()=>expectArrayBuffer(newobj.int32,int32));
+
+    it("float32",()=>expectArrayBuffer(newobj.float32,float32));
+    it("float64",()=>expectArrayBuffer(newobj.float64,float64));
+})
+
+type TypedArray =  Uint8Array | Uint16Array | Uint32Array | Int32Array | Int16Array | Int8Array | Float32Array | Float64Array;
+
+function expectArrayBuffer(a:TypedArray,b:TypedArray) {
+    let len = a.byteLength;
+
+    var abuffer = a.buffer;
+    var bbuffer = b.buffer;
+    for(let t=0;t<len;t++){
+        expect(abuffer[t]).eq(bbuffer[t]);
     }
-    return buf;
 }
 
 // describe('benchmark', () => {

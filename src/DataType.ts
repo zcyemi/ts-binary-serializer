@@ -15,4 +15,5 @@ export enum DataType {
     Map = 13,
     Varint32 = 14,
     UVarint32 = 15,
+    TypedArray = 16,
 }
