@@ -27,10 +27,10 @@ let d1 = BinaryDeserialize(A,d); // A { str: 'HelloWorld' }
 ## Usage
 ```ts
 //Serialize
-export function BinarySerialize <T> (obj : T,type?:{new():T}):ArrayBuffer
+export function BinarySerialize <T> (obj : T,type?:{new():T}):Uint8Array
 
 //Deserialize
-export function BinaryDeserialize<T>(type:{new():T},databuffer:ArrayBuffer): T |null
+export function BinaryDeserialize<T>(type:{new():T},databuffer:Uint8Array): T |null
 ```
 
 sample
@@ -65,12 +65,17 @@ export enum DataType {
     Uint8,
     String,
     Bool,
-    Object
+    Object,
+    Float16,
+    Map,
+    Varint32,
+    UVarint32,
+    TypedArray,
 }
 
 ```
 
-### Typed Array
+### Object Array
 set the second param of @seralizeField to true when the property is an Array object.
 ```ts
 class ClassA{
@@ -80,6 +85,18 @@ class ClassA{
     public numAry:Array<Number>;
 }
 ```
+### TypedArray
+```ts
+class ClassWithTypedArray{
+    @SerializeField(DataType.TypedArray,false,Uint8Array)
+    public uint8:Uint8Array;
+    @SerializeField(DataType.TypedArray,false,Int32Array)
+    public int32:Int32Array;
+    @SerializeField(DataType.TypedArray,false,Float64Array)
+    public float64:Float64Array;
+}
+```
+
 ### Nested Class
 ```ts
 class ClassB{

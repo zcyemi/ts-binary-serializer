@@ -44,27 +44,27 @@ export module BinarySerializer{
         return [obj,mc];
     }
 
-    export function Serialize<T>(obj:T,type?:{new():T},options?:BinarySerializeOptions):ArrayBuffer{
+    export function Serialize<T>(obj:T,type?:{new():T},options?:BinarySerializeOptions):Uint8Array{
         let mc = preSerialize(obj,type);
         if(options == null) options = new BinaryDeserializeOptions();
     
         let binarybuffer = BinaryBuffer.create(options);
         binarybuffer.serialize(mc,obj);
-        return binarybuffer.m_arrayBuffer.buffer.slice(0,binarybuffer.pos);
+        return binarybuffer.m_arrayBuffer.slice(0,binarybuffer.pos);
     }
 
-    export function SerializeWithDebugInfo<T>(obj:T,type?:{new():T},options?:BinarySerializeOptions):[ArrayBuffer,BinaryBufDbgInfo]{
+    export function SerializeWithDebugInfo<T>(obj:T,type?:{new():T},options?:BinarySerializeOptions):[Uint8Array,BinaryBufDbgInfo]{
         let mc = preSerialize(obj,type);
         if(options == null) options = new BinaryDeserializeOptions();
 
         const buffer = BinaryBuffer.create(options);
         let binarybuffer:BinaryBuffer & BinaryBufferDebug = BinaryBufferDebug.Gen(buffer);
         binarybuffer.serialize(mc,obj);
-        let arraybuf = binarybuffer.m_arrayBuffer.buffer.slice(0,binarybuffer.pos);
+        let arraybuf = binarybuffer.m_arrayBuffer.slice(0,binarybuffer.pos);
         return [arraybuf,binarybuffer.dbginfo];
     }
 
-    export function Deserialize<T>(databuffer:ArrayBuffer,type:{new():T},options?:BinaryDeserializeOptions):T{
+    export function Deserialize<T>(databuffer:Uint8Array,type:{new():T},options?:BinaryDeserializeOptions):T{
         let [obj,mc] = preDeserialize(type);
         if(options == null) options = new BinaryDeserializeOptions();
 
@@ -72,7 +72,7 @@ export module BinarySerializer{
         return binarybuffer.deserialize(obj,mc);
     }
 
-    export function DeserializeWithDebugInfo<T>(databuffer:ArrayBuffer,type:{new():T},options?:BinaryDeserializeOptions):[T,BinaryBufDbgInfo]{
+    export function DeserializeWithDebugInfo<T>(databuffer:Uint8Array,type:{new():T},options?:BinaryDeserializeOptions):[T,BinaryBufDbgInfo]{
         let [obj,mc] = preDeserialize(type);
         if(options == null) options = new BinaryDeserializeOptions();
         
