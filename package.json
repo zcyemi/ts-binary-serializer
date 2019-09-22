@@ -1,6 +1,6 @@
 {
   "name": "ts-binary-serializer",
-  "version": "2.0.2",
+  "version": "2.1.0",
   "description": "Binary serializer for typescript",
   "main": "dist/src/BinarySerializer.js",
   "typings": "./dist/src/BinarySerializer.d.ts",
