@@ -61,7 +61,7 @@ export enum DataType {
     Int16,
     Int8,
     Uint32,
-    Uint16
+    Uint16,
     Uint8,
     String,
     Bool,
@@ -70,11 +70,12 @@ export enum DataType {
     Map,
     Varint32,
     UVarint32,
+    TypedArray,
 }
 
 ```
 
-### Typed Array
+### Object Array
 set the second param of @seralizeField to true when the property is an Array object.
 ```ts
 class ClassA{
@@ -84,6 +85,18 @@ class ClassA{
     public numAry:Array<Number>;
 }
 ```
+### TypedArray
+```ts
+class ClassWithTypedArray{
+    @SerializeField(DataType.TypedArray,false,Uint8Array)
+    public uint8:Uint8Array;
+    @SerializeField(DataType.TypedArray,false,Int32Array)
+    public int32:Int32Array;
+    @SerializeField(DataType.TypedArray,false,Float64Array)
+    public float64:Float64Array;
+}
+```
+
 ### Nested Class
 ```ts
 class ClassB{
