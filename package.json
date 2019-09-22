@@ -11,19 +11,18 @@
   "author": "Chu Zheng",
   "homepage": "https://github.com/soyemi/ts-binary-serializer#readme",
   "license": "MIT",
-  "dependencies": {
-  },
+  "dependencies": {},
   "devDependencies": {
     "@types/mocha": "^5.2.5",
     "chai": "^4.2.0",
-    "mocha": "^5.2.0",
+    "mocha": "^6.2.0",
     "npm": "^6.4.1",
-    "rollup": "^0.66.0",
-    "rollup-plugin-commonjs": "^9.1.6",
-    "rollup-plugin-node-resolve": "^3.4.0",
-    "rollup-plugin-typescript2": "^0.17.0",
-    "rollup-plugin-uglify-es": "0.0.1",
-    "ts-node": "^7.0.1",
-    "typescript": "^3.0.3"
+    "rollup": "^1.21.4",
+    "rollup-plugin-commonjs": "^10.1.0",
+    "rollup-plugin-node-resolve": "^5.2.0",
+    "rollup-plugin-typescript2": "^0.24.2",
+    "rollup-plugin-uglify-es": "^0.0.1",
+    "ts-node": "^8.4.1",
+    "typescript": "^3.6.3"
   }
 }
