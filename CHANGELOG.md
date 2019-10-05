@@ -1,4 +1,7 @@
 ## Changelog
+- 2.1.1
+    + Derializer method `BinarySerializer.Deserialize(dataBuffer:Uint8Array)` now support `Uint8Array|ArrayBuffer` for parameter `databuffer`
+    + Change main script to es module at `package.json`
 - 2.1.0
     + Change output BufferType from `ArrayBuffer` to `Uint8Array`.
     + Support `DataType.TypedArray` for `Uint8Array | Uint16Array | Uint32Array | Int32Array | Int16Array | Int8Array | Float32Array | Float64Array`

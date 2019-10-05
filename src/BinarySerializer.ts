@@ -64,7 +64,7 @@ export module BinarySerializer{
         return [arraybuf,binarybuffer.dbginfo];
     }
 
-    export function Deserialize<T>(databuffer:Uint8Array,type:{new():T},options?:BinaryDeserializeOptions):T{
+    export function Deserialize<T>(databuffer:Uint8Array|ArrayBuffer,type:{new():T},options?:BinaryDeserializeOptions):T{
         let [obj,mc] = preDeserialize(type);
         if(options == null) options = new BinaryDeserializeOptions();
 
@@ -72,7 +72,7 @@ export module BinarySerializer{
         return binarybuffer.deserialize(obj,mc);
     }
 
-    export function DeserializeWithDebugInfo<T>(databuffer:Uint8Array,type:{new():T},options?:BinaryDeserializeOptions):[T,BinaryBufDbgInfo]{
+    export function DeserializeWithDebugInfo<T>(databuffer:Uint8Array|ArrayBuffer,type:{new():T},options?:BinaryDeserializeOptions):[T,BinaryBufDbgInfo]{
         let [obj,mc] = preDeserialize(type);
         if(options == null) options = new BinaryDeserializeOptions();
         

@@ -1,15 +1,15 @@
 {
   "name": "ts-binary-serializer",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "Binary serializer for typescript",
-  "main": "dist/src/BinarySerializer.js",
+  "main": "dist/BinarySerializer.es.js",
   "typings": "./dist/src/BinarySerializer.d.ts",
   "scripts": {
     "test": "mocha -r ts-node/register ./tests/**.test.ts",
     "build": "tsc && rollup -c ./rollup.config.ts"
   },
   "author": "Chu Zheng",
-  "homepage": "https://github.com/soyemi/ts-binary-serializer#readme",
+  "homepage": "https://github.com/zcyemi/ts-binary-serializer#readme",
   "license": "MIT",
   "dependencies": {},
   "devDependencies": {
