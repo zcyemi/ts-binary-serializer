@@ -1,8 +1,9 @@
 {
   "name": "ts-binary-serializer",
-  "version": "2.1.1",
+  "version": "2.1.2",
   "description": "Binary serializer for typescript",
-  "main": "dist/BinarySerializer.es.js",
+  "main": "dist/src/BinarySerializer.js",
+  "module": "dist/BinarySerializer.es.js",
   "typings": "./dist/src/BinarySerializer.d.ts",
   "scripts": {
     "test": "mocha -r ts-node/register ./tests/**.test.ts",

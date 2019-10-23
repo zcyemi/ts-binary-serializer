@@ -1,4 +1,6 @@
 ## Changelog
+- 2.1.2
+    + Fix module resolution with commonjs and esmodule.
 - 2.1.1
     + Derializer method `BinarySerializer.Deserialize(dataBuffer:Uint8Array)` now support `Uint8Array|ArrayBuffer` for parameter `databuffer`
     + Change main script to es module at `package.json`
