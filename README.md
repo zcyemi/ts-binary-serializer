@@ -1,6 +1,8 @@
-# ts-binary-serializer
+# ts-binary-serializer 
 
 Binary serializer for typescript, support NodeJs/Browser.
+
+![npm](https://img.shields.io/npm/v/ts-binary-serializer)
 
 ## Quick Start
 
