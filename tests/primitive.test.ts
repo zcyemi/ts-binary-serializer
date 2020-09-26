@@ -255,6 +255,8 @@ class ClassWithTypedArray{
     public float32:Float32Array;
     @SerializeField(DataType.TypedArray,false,Float64Array)
     public float64:Float64Array;
+    @SerializeField(DataType.TypedArray,true,Uint8Array)
+    public arrayUint8Array:Uint8Array[];
 }
 
 describe("TypedArray",()=>{
@@ -267,6 +269,7 @@ describe("TypedArray",()=>{
     var int32 = new Int32Array([-2147483648,2147483647,0]);
     var float32 = new Float32Array([0.435,-546556.33,67663.2324443]);
     var float64 = new Float64Array([0.435,-546556.33,67663.2324443]);
+    var arrayUint8Array = [new Uint8Array([0,255]),new Uint8Array([126,233])];
  
 
     var obj = new ClassWithTypedArray();
@@ -278,6 +281,7 @@ describe("TypedArray",()=>{
     obj.int32 = int32;
     obj.float32 = float32;
     obj.float64 = float64;
+    obj.arrayUint8Array  = arrayUint8Array;
 
     var binarydata = BinarySerializer.Serialize(obj,ClassWithTypedArray);
     var newobj = BinarySerializer.Deserialize(binarydata,ClassWithTypedArray);
@@ -292,6 +296,11 @@ describe("TypedArray",()=>{
 
     it("float32",()=>expectArrayBuffer(newobj.float32,float32));
     it("float64",()=>expectArrayBuffer(newobj.float64,float64));
+
+    it("arrayUint8Array",()=>{
+        expectArrayBuffer(newobj.arrayUint8Array[0],arrayUint8Array[0]);
+        expectArrayBuffer(newobj.arrayUint8Array[1],arrayUint8Array[1]);
+    })
 })
 
 type TypedArray =  Uint8Array | Uint16Array | Uint32Array | Int32Array | Int16Array | Int8Array | Float32Array | Float64Array;
