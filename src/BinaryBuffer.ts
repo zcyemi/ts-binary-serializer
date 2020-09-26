@@ -143,7 +143,7 @@ export class BinaryBuffer {
             }
         }else{
             for(let i=0;i<arylen;i++){
-                f.call(this,ary[i]);
+                (f as any).call(this,ary[i], tmc);
             }
         }
     }
@@ -199,7 +199,7 @@ export class BinaryBuffer {
         }
         else{
             for(let i=0;i<arylen;i++){
-                ary.push(f.call(this,null));
+                ary.push(f.call(this,tmc));
             }
         }
 
