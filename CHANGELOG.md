@@ -1,4 +1,6 @@
 ## Changelog
+- 2.1.3
+    + Fix null ref exception when using array of TypedArray.
 - 2.1.2
     + Fix module resolution with commonjs and esmodule.
 - 2.1.1
